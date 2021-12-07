@@ -37,6 +37,8 @@ func MiddlewareSetUpMetricsWritestream(upstream *url.URL) Middleware {
 		r.URL.Host = upstream.Host
 		if strings.Contains(upstream.Host, "thanos-receive") {
 			r.URL.Path = path.Join(upstream.Path, r.URL.Path)
+		} else {
+			r.URL.Path = "/"
 		}
 	}
 }
