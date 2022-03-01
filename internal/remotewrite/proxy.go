@@ -33,12 +33,12 @@ type Endpoint struct {
 	Name string `yaml:"name"`
 	URL  string `yaml:"url"`
 	// +optional
-	TlsConfig *TlsConfig `yaml:"tlsConfig,omitempty"`
+	TLSConfig *TLSConfig `yaml:"tlsConfig,omitempty"`
 	// +optional
 	BasicAuth *BasicAuth `yaml:"basicAuth,omitempty"`
 }
 
-type TlsConfig struct {
+type TLSConfig struct {
 	CA   string `yaml:"ca"`
 	Cert string `yaml:"cert"`
 	Key  string `yaml:"key"`
@@ -49,35 +49,53 @@ type BasicAuth struct {
 	Password string `yaml:"password"`
 }
 
-func Proxy(write *url.URL, endpoints *Endpoints, logger log.Logger, r *prometheus.Registry) http.Handler {
-
-	requests := prometheus.NewCounterVec(prometheus.CounterOpts{
+var (
+	requests = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name:        "http_proxy_requests_total",
 		Help:        "Counter of proxy HTTP requests.",
 		ConstLabels: prometheus.Labels{"proxy": "metricsv1-write"},
 	}, []string{"method"})
-	r.MustRegister(requests)
 
-	if endpoints == nil {
-		endpoints = &Endpoints{}
-	}
-
-	if write != nil {
-		endpoints.Endpoints = append(endpoints.Endpoints, Endpoint{
-			URL:  write.String(),
-			Name: THANOS_ENDPOINT_NAME,
-		})
-	}
-
-	remotewriteRequests := prometheus.NewCounterVec(prometheus.CounterOpts{
+	remotewriteRequests = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name:        "remote_write_requests_total",
 		Help:        "Counter of remote write requests.",
 		ConstLabels: prometheus.Labels{"proxy": "metricsv1-remotewrite"},
 	}, []string{"code", "name"})
-	r.MustRegister(remotewriteRequests)
+)
 
+func createMtlsTransport(cfg TLSConfig) (*http.Transport, error) {
+	// Load Server CA cert
+	caCert, err := ioutil.ReadFile(cfg.CA)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to load ca cert file")
+	}
+	// Load client cert/key
+	cert, err := tls.LoadX509KeyPair(cfg.Cert, cfg.Key)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to load client cert/key file")
+	}
+
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	// Setup HTTPS client
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      caCertPool,
+		MinVersion:   tls.VersionTLS12,
+	}
+	return &http.Transport{
+		Dial: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).Dial,
+		TLSHandshakeTimeout: 10 * time.Second,
+		DisableKeepAlives:   true,
+		TLSClientConfig:     tlsConfig,
+	}, nil
+}
+
+func remoteWrite(write *url.URL, endpoints *Endpoints, logger log.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		requests.With(prometheus.Labels{"method": r.Method}).Inc()
 
 		body, _ := ioutil.ReadAll(r.Body)
@@ -98,8 +116,8 @@ func Proxy(write *url.URL, endpoints *Endpoints, logger log.Logger, r *prometheu
 		rlogger := log.With(logger, "request", middleware.GetReqID(r.Context()))
 		for _, endpoint := range endpoints.Endpoints {
 			client := &http.Client{}
-			if endpoint.TlsConfig != nil {
-				transport, err := createMtlsTransport(*endpoint.TlsConfig)
+			if endpoint.TLSConfig != nil {
+				transport, err := createMtlsTransport(*endpoint.TLSConfig)
 				if err != nil {
 					level.Error(rlogger).Log("msg", "Failed to create mtls transport", "err", err, "url", endpoint.URL)
 					return
@@ -142,33 +160,21 @@ func Proxy(write *url.URL, endpoints *Endpoints, logger log.Logger, r *prometheu
 	})
 }
 
-func createMtlsTransport(cfg TlsConfig) (*http.Transport, error) {
-	// Load Server CA cert
-	caCert, err := ioutil.ReadFile(cfg.CA)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to load ca cert file")
-	}
-	// Load client cert/key
-	cert, err := tls.LoadX509KeyPair(cfg.Cert, cfg.Key)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to load client cert/key file")
+func Proxy(write *url.URL, endpoints *Endpoints, logger log.Logger, r *prometheus.Registry) http.Handler {
+
+	r.MustRegister(requests)
+	r.MustRegister(remotewriteRequests)
+
+	if endpoints == nil {
+		endpoints = &Endpoints{}
 	}
 
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-	// Setup HTTPS client
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		RootCAs:      caCertPool,
-		MinVersion:   tls.VersionTLS12,
+	if write != nil {
+		endpoints.Endpoints = append(endpoints.Endpoints, Endpoint{
+			URL:  write.String(),
+			Name: THANOS_ENDPOINT_NAME,
+		})
 	}
-	return &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		TLSHandshakeTimeout: 10 * time.Second,
-		DisableKeepAlives:   true,
-		TLSClientConfig:     tlsConfig,
-	}, nil
+
+	return remoteWrite(write, endpoints, logger)
 }
