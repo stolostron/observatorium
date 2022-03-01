@@ -53,6 +53,10 @@ func Proxy(write *url.URL, endpoints *Endpoints, logger log.Logger, r *prometheu
 	}, []string{"method"})
 	r.MustRegister(requests)
 
+	if endpoints == nil {
+		endpoints = &Endpoints{}
+	}
+
 	if write != nil {
 		endpoints.Endpoints = append(endpoints.Endpoints, Endpoint{
 			URL: write.String(),
