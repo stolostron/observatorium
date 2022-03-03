@@ -2,51 +2,28 @@ package remotewrite
 
 import (
 	"bytes"
-	"crypto/tls"
-	"crypto/x509"
-	"encoding/base64"
-	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"net/url"
 	"path"
 	"strconv"
-	"time"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	promconfig "github.com/prometheus/common/config"
 )
 
 const (
 	THANOS_ENDPOINT_NAME = "thanos-receiver"
 )
 
-type Endpoints struct {
-	Endpoints []Endpoint `yaml:"endpoints"`
-}
-
 type Endpoint struct {
 	Name string `yaml:"name"`
 	URL  string `yaml:"url"`
 	// +optional
-	TLSConfig *TLSConfig `yaml:"tlsConfig,omitempty"`
-	// +optional
-	BasicAuth *BasicAuth `yaml:"basicAuth,omitempty"`
-}
-
-type TLSConfig struct {
-	CA   string `yaml:"ca"`
-	Cert string `yaml:"cert"`
-	Key  string `yaml:"key"`
-}
-
-type BasicAuth struct {
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
+	ClientConfig *promconfig.HTTPClientConfig `yaml:"http_client_config,omitempty"`
 }
 
 var (
@@ -63,38 +40,7 @@ var (
 	}, []string{"code", "name"})
 )
 
-func createMtlsTransport(cfg TLSConfig) (*http.Transport, error) {
-	// Load Server CA cert
-	caCert, err := ioutil.ReadFile(cfg.CA)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to load ca cert file")
-	}
-	// Load client cert/key
-	cert, err := tls.LoadX509KeyPair(cfg.Cert, cfg.Key)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to load client cert/key file")
-	}
-
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-	// Setup HTTPS client
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		RootCAs:      caCertPool,
-		MinVersion:   tls.VersionTLS12,
-	}
-	return &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		TLSHandshakeTimeout: 10 * time.Second,
-		DisableKeepAlives:   true,
-		TLSClientConfig:     tlsConfig,
-	}, nil
-}
-
-func remoteWrite(write *url.URL, endpoints *Endpoints, logger log.Logger) http.Handler {
+func remoteWrite(write *url.URL, endpoints []Endpoint, logger log.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requests.With(prometheus.Labels{"method": r.Method}).Inc()
 
@@ -102,38 +48,32 @@ func remoteWrite(write *url.URL, endpoints *Endpoints, logger log.Logger) http.H
 		_ = r.Body.Close()
 		r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 
-		if endpoints == nil {
-			endpoints = &Endpoints{}
-		}
 		if write != nil {
 			remotewriteUrl := url.URL{}
 			remotewriteUrl.Path = path.Join(write.Path, r.URL.Path)
 			remotewriteUrl.Host = write.Host
 			remotewriteUrl.Scheme = write.Scheme
-			endpoints.Endpoints[len(endpoints.Endpoints)-1].URL = remotewriteUrl.String()
+			endpoints[len(endpoints)-1].URL = remotewriteUrl.String()
 		}
 
 		rlogger := log.With(logger, "request", middleware.GetReqID(r.Context()))
-		for _, endpoint := range endpoints.Endpoints {
-			client := &http.Client{}
-			if endpoint.TLSConfig != nil {
-				transport, err := createMtlsTransport(*endpoint.TLSConfig)
+		for _, endpoint := range endpoints {
+			var client *http.Client
+			var err error
+			if endpoint.ClientConfig == nil {
+				client = &http.Client{}
+			} else {
+				client, err = promconfig.NewClientFromConfig(*endpoint.ClientConfig, endpoint.Name, true)
 				if err != nil {
-					level.Error(rlogger).Log("msg", "Failed to create mtls transport", "err", err, "url", endpoint.URL)
-					return
+					level.Error(rlogger).Log("failed to create a new HTTP client", "err", err)
 				}
-				client.Transport = transport
 			}
+
 			req, err := http.NewRequest(http.MethodPost, endpoint.URL, bytes.NewReader(body))
 			req.Header = r.Header
 			if err != nil {
 				level.Error(rlogger).Log("msg", "Failed to create the forward request", "err", err, "url", endpoint.URL)
 			} else {
-				if endpoint.BasicAuth != nil {
-					auth := fmt.Sprintf("%s:%s", endpoint.BasicAuth.User, endpoint.BasicAuth.Password)
-					authHeader := fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(auth)))
-					req.Header.Add("Authorization", authHeader)
-				}
 				ep := endpoint
 				go func() {
 					resp, err := client.Do(req)
@@ -160,17 +100,17 @@ func remoteWrite(write *url.URL, endpoints *Endpoints, logger log.Logger) http.H
 	})
 }
 
-func Proxy(write *url.URL, endpoints *Endpoints, logger log.Logger, r *prometheus.Registry) http.Handler {
+func Proxy(write *url.URL, endpoints []Endpoint, logger log.Logger, r *prometheus.Registry) http.Handler {
 
 	r.MustRegister(requests)
 	r.MustRegister(remotewriteRequests)
 
 	if endpoints == nil {
-		endpoints = &Endpoints{}
+		endpoints = []Endpoint{}
 	}
 
 	if write != nil {
-		endpoints.Endpoints = append(endpoints.Endpoints, Endpoint{
+		endpoints = append(endpoints, Endpoint{
 			URL:  write.String(),
 			Name: THANOS_ENDPOINT_NAME,
 		})
