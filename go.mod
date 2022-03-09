@@ -109,4 +109,7 @@ require (
 	k8s.io/klog v1.0.0 // indirect
 )
 
-replace go.etcd.io/etcd => go.etcd.io/etcd v0.5.0-alpha.5.0.20200329194405-dd816f0735f8
+replace (
+	go.etcd.io/etcd => go.etcd.io/etcd v0.5.0-alpha.5.0.20200329194405-dd816f0735f8
+	google.golang.org/grpc => google.golang.org/grpc v1.27.0
+)
