@@ -3,15 +3,18 @@ package remotewrite
 import (
 	"bytes"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"path"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
+	promconfig "github.com/prometheus/common/config"
 )
 
 const (
@@ -22,7 +25,7 @@ type Endpoint struct {
 	Name string `yaml:"name"`
 	URL  string `yaml:"url"`
 	// +optional
-	ClientConfig *HTTPClientConfig `yaml:"http_client_config,omitempty"`
+	ClientConfig *promconfig.HTTPClientConfig `yaml:"http_client_config,omitempty"`
 }
 
 var (
@@ -62,7 +65,11 @@ func remoteWrite(write *url.URL, endpoints []Endpoint, logger log.Logger) http.H
 			if endpoint.ClientConfig == nil {
 				client = &http.Client{}
 			} else {
-				client, err = NewClientFromConfig(*endpoint.ClientConfig, endpoint.Name, false)
+				client, err = promconfig.NewClientFromConfig(*endpoint.ClientConfig, endpoint.Name,
+					promconfig.WithDialContextFunc((&net.Dialer{
+						Timeout:   30 * time.Second,
+						KeepAlive: 30 * time.Second,
+					}).DialContext))
 				if err != nil {
 					//level.Error(rlogger).Log("msg", "failed to create a new HTTP client", "err", err)
 					LogChannels[i] <- logMessage{
