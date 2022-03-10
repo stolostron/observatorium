@@ -85,9 +85,9 @@ func remoteWrite(write *url.URL, endpoints []Endpoint, logger log.Logger) http.H
 			if err != nil {
 				//level.Error(rlogger).Log("msg", "Failed to create the forward request", "err", err, "url", endpoint.URL)
 				LogChannels[i] <- logMessage{
-					messageKey: "Failed to create the forward request",
+					messageKey: "failed to create the forward request",
 					keyvals: []interface{}{
-						"msg", "Failed to create the forward request", "err", err,
+						"msg", "failed to create the forward request", "err", err,
 					}}
 			} else {
 				ep := endpoint
@@ -98,9 +98,9 @@ func remoteWrite(write *url.URL, endpoints []Endpoint, logger log.Logger) http.H
 						remotewriteRequests.With(prometheus.Labels{"code": "<error>", "name": ep.Name}).Inc()
 						//level.Error(rlogger).Log("msg", "Failed to send request to the server", "err", err)
 						LogChannels[j] <- logMessage{
-							messageKey: "Failed to send request to the server",
+							messageKey: "failed to send request to the server",
 							keyvals: []interface{}{
-								"msg", "Failed to send request to the server", "err", err,
+								"msg", "failed to send request to the server", "err", err,
 							}}
 					} else {
 						defer resp.Body.Close()
@@ -110,15 +110,15 @@ func remoteWrite(write *url.URL, endpoints []Endpoint, logger log.Logger) http.H
 							if err != nil {
 								//level.Error(rlogger).Log("msg", "Failed to read response of the forward request", "err", err, "return code", resp.Status, "url", ep.URL)
 								LogChannels[j] <- logMessage{
-									messageKey: "Failed to forward metrics" + resp.Status,
+									messageKey: "failed to forward metrics" + resp.Status,
 									keyvals: []interface{}{
-										"msg", "Failed to forward metrics", "return code", resp.Status, "url", ep.URL,
+										"msg", "failed to forward metrics", "return code", resp.Status, "url", ep.URL,
 									}}
 							} else {
 								LogChannels[j] <- logMessage{
 									messageKey: "Failed to forward metrics" + resp.Status,
 									keyvals: []interface{}{
-										"msg", "Failed to forward metrics", "return code", resp.Status, "response", string(responseBody), "url", ep.URL}}
+										"msg", "failed to forward metrics", "return code", resp.Status, "response", string(responseBody), "url", ep.URL}}
 							}
 						} else {
 							level.Debug(rlogger).Log("msg", successWrite, "url", ep.URL)
