@@ -1,4 +1,4 @@
-FROM golang:1.18-alpine3.13 as builder
+FROM registry.ci.openshift.org/stolostron/builder:go1.18-linux AS builder
 
 RUN apk add --update --no-cache ca-certificates tzdata git make bash && update-ca-certificates
 
