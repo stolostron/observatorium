@@ -147,7 +147,8 @@ func NewHandler(read, write *url.URL, opts ...HandlerOption) http.Handler {
 	}
 
 	if write != nil || c.endpoints != nil {
-		proxyRemoteWrite := remotewrite.Proxy(write, c.endpoints, c.logger, c.registry)
+		rd := &remotewrite.RequestDuplicator{}
+		proxyRemoteWrite := rd.Proxy(write, c.endpoints, c.logger, c.registry)
 		r.Group(func(r chi.Router) {
 			r.Use(c.writeMiddlewares...)
 			r.Handle("/api/v1/receive", c.instrument.NewHandler(

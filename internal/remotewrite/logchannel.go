@@ -17,13 +17,26 @@ const (
 var (
 	logMaxCount = int64(10)
 	logInterval = 600 * time.Second
-
-	LogChannels = []chan logMessage{}
 )
 
 type logMessage struct {
 	messageKey string
 	keyvals    []interface{}
+}
+
+type logManager struct {
+	logChannels map[string]chan logMessage
+}
+
+func (lm *logManager) log(forEndpoint, key string, keyvals ...interface{}) {
+	stream, ok := lm.logChannels[forEndpoint]
+	if !ok || stream == nil {
+		return
+	}
+	stream <- logMessage{
+		messageKey: key,
+		keyvals:    keyvals,
+	}
 }
 
 type logCounter struct {
@@ -46,7 +59,31 @@ func revertCounter(counter *logCounter) {
 	}
 }
 
-func InitChannels(logger log.Logger, size int) {
+// newLogManager creates a new logManager for a list of endpoints
+// and calls the custom process function if provided or defaultProcessFunction if nil
+// process should start a go routine that reads from the logChannels and logs the messages
+func newLogManager(logger log.Logger, forEndpoints []Endpoint, process func(logger log.Logger, messages map[string]chan logMessage)) *logManager {
+	logChannels := make(map[string]chan logMessage)
+	for i, ep := range forEndpoints {
+		if ep.Name == "" {
+			ep.Name = fmt.Sprintf("endpoint_%d", i)
+		}
+		logChannels[ep.Name] = make(chan logMessage)
+
+	}
+	logChannels[thanosEndpointName] = make(chan logMessage)
+
+	if process == nil {
+		process = defaultProcessFunction
+	}
+	process(logger, logChannels)
+
+	return &logManager{
+		logChannels: logChannels,
+	}
+}
+
+func defaultProcessFunction(logger log.Logger, messages map[string]chan logMessage) {
 	if os.Getenv("LOG_MAX_COUNT") != "" {
 		v, err := strconv.ParseInt(os.Getenv("LOG_MAX_COUNT"), 10, 0)
 		if err != nil {
@@ -59,18 +96,17 @@ func InitChannels(logger log.Logger, size int) {
 			logInterval = v
 		}
 	}
-	for i := 0; i < size; i++ {
-		LogChannels = append(LogChannels, make(chan logMessage))
-	}
-	for i := 0; i < size; i++ {
-		j := i
-		counter := &logCounter{
-			LogTimestamps: []time.Time{},
-		}
+
+	for _, v := range messages {
 		go func() {
+			counter := &logCounter{
+				LogTimestamps: []time.Time{},
+			}
+			messageStream := v
+
 			for {
 				select {
-				case message := <-LogChannels[j]:
+				case message := <-messageStream:
 					if message.messageKey == successWrite {
 						revertCounter(counter)
 					} else {
