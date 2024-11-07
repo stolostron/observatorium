@@ -7,13 +7,13 @@ metadata:
     build.appstudio.redhat.com/target_branch: '{{target_branch}}'
     pipelinesascode.tekton.dev/max-keep-runs: "3"
     pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch
-      == "release-2.12"
+      == "release-2.13"
   creationTimestamp: null
   labels:
-    appstudio.openshift.io/application: release-acm-212
-    appstudio.openshift.io/component: observatorium-acm-212
+    appstudio.openshift.io/application: release-acm-213
+    appstudio.openshift.io/component: observatorium-acm-213
     pipelines.appstudio.openshift.io/type: build
-  name: observatorium-acm-212-on-push
+  name: observatorium-acm-213-on-push
   namespace: crt-redhat-acm-tenant
 spec:
   params:
@@ -22,7 +22,7 @@ spec:
   - name: revision
     value: '{{revision}}'
   - name: output-image
-    value: quay.io/redhat-user-workloads/crt-redhat-acm-tenant/release-acm-212/observatorium-acm-212:{{revision}}
+    value: quay.io/redhat-user-workloads/crt-redhat-acm-tenant/release-acm-213/observatorium-acm-213:{{revision}}
   - name: dockerfile
     value: Containerfile.operator
   - name: path-context
@@ -311,7 +311,7 @@ spec:
         - name: name
           value: clair-scan
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-clair-scan:0.1@sha256:baea4be429cf8d91f7c758378cea42819fe324f25a7f957bf9805409cab6d123
+          value: quay.io/konflux-ci/tekton-catalog/task-clair-scan:0.1@sha256:baea4be429cf8d91f7c758378cea42819fe324f25a7f957bf9805409cab6d133
         - name: kind
           value: task
         resolver: bundles
