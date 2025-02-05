@@ -18,7 +18,7 @@ ARG VERSION
 ARG VCS_REF
 ARG DOCKERFILE_PATH
 
-LABEL vendor="Observatorium" \
+LABEL vendor="Red Hat, Inc" \
     com.redhat.component="observatorium" \
     name="observatorium/observatorium" \
     summary="observatorium-acm" \
