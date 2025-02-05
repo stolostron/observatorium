@@ -9,7 +9,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-kit/kit v0.10.0
-	github.com/golang/protobuf v1.4.3 // indirect
+	github.com/golang/protobuf v1.5.0 // indirect
 	github.com/metalmatze/signal v0.0.0-20200616171423-be84551ba3ce
 	github.com/oklog/run v1.1.0
 	github.com/prometheus/client_golang v1.11.1
@@ -51,7 +51,7 @@ require (
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
-	google.golang.org/protobuf v1.26.0-rc.1 // indirect
+	google.golang.org/protobuf v1.36.4 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.1 // indirect
 	k8s.io/apimachinery v0.18.0 // indirect
 	k8s.io/klog v1.0.0 // indirect
