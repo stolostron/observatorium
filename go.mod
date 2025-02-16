@@ -7,7 +7,7 @@ require (
 	github.com/cloudflare/cfssl v1.4.1
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/ghodss/yaml v1.0.0
-	github.com/go-chi/chi v4.0.2+incompatible
+	github.com/go-chi/chi v4.1.3+incompatible
 	github.com/go-kit/kit v0.10.0
 	github.com/golang/protobuf v1.5.0 // indirect
 	github.com/metalmatze/signal v0.0.0-20200616171423-be84551ba3ce
