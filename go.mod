@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/brancz/kube-rbac-proxy v0.5.0
 	github.com/cloudflare/cfssl v1.4.1
-	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/coreos/go-oidc v2.3.0+incompatible
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-kit/kit v0.10.0
@@ -52,7 +52,7 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/protobuf v1.36.4 // indirect
-	gopkg.in/square/go-jose.v2 v2.4.1 // indirect
+	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
 	k8s.io/apimachinery v0.18.0 // indirect
 	k8s.io/klog v1.0.0 // indirect
 )
