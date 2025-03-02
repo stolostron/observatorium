@@ -8,7 +8,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-kit/kit/log"
 	"github.com/observatorium/observatorium/internal/proxy"
 	"github.com/prometheus/client_golang/prometheus"
