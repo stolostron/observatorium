@@ -31,7 +31,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/version"
 	"go.uber.org/automaxprocs/maxprocs"
-	yamlv2 "gopkg.in/yaml.v2"
+	yamlv2 "gopkg.in/yaml.v3"
 
 	"github.com/observatorium/observatorium/internal"
 	logsv1 "github.com/observatorium/observatorium/internal/api/logs/v1"
