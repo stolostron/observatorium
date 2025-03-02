@@ -14,7 +14,7 @@ require (
 	github.com/go-kit/kit v0.10.0
 	github.com/go-pluto/styx v0.0.0-20200109161911-78a77eb717b4
 	github.com/golang/protobuf v1.4.3 // indirect
-	github.com/google/go-jsonnet v0.15.1-0.20200310221949-724650d358b6
+	github.com/google/go-jsonnet v0.20.0
 	github.com/grpc-ecosystem/grpc-gateway v1.14.3 // indirect
 	github.com/jsonnet-bundler/jsonnet-bundler v0.3.1
 	github.com/metalmatze/signal v0.0.0-20200616171423-be84551ba3ce
@@ -48,7 +48,7 @@ require (
 	github.com/coreos/go-systemd/v22 v22.0.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
-	github.com/fatih/color v1.9.0 // indirect
+	github.com/fatih/color v1.12.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.0 // indirect
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
@@ -68,7 +68,7 @@ require (
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/lib/pq v1.3.0 // indirect
-	github.com/mattn/go-colorable v0.1.4 // indirect
+	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
@@ -107,6 +107,7 @@ require (
 	gopkg.in/square/go-jose.v2 v2.4.1 // indirect
 	k8s.io/apimachinery v0.18.0 // indirect
 	k8s.io/klog v1.0.0 // indirect
+	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
 replace (
