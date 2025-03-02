@@ -25,7 +25,7 @@ require (
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/prometheus/prometheus v1.8.2-0.20200305080338-7164b58945bb
 	github.com/urfave/cli v1.22.2 // indirect
-	go.uber.org/automaxprocs v1.2.0
+	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
 	golang.org/x/sys v0.29.0 // indirect
