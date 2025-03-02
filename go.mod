@@ -1,6 +1,8 @@
 module github.com/observatorium/observatorium
 
-go 1.18
+go 1.23.0
+
+toolchain go1.23.6
 
 require (
 	github.com/brancz/gojsontoyaml v0.0.0-20191212081931-bf2969bbd742
@@ -27,7 +29,7 @@ require (
 	github.com/urfave/cli v1.22.2 // indirect
 	go.uber.org/automaxprocs v1.2.0
 	golang.org/x/net v0.34.0 // indirect
-	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
+	golang.org/x/oauth2 v0.27.0
 	golang.org/x/sys v0.29.0 // indirect
 	google.golang.org/genproto v0.0.0-20200825200019-8632dd797987 // indirect
 	gopkg.in/yaml.v2 v2.4.0
