@@ -3,7 +3,7 @@ module github.com/observatorium/observatorium
 go 1.18
 
 require (
-	github.com/brancz/gojsontoyaml v0.0.0-20191212081931-bf2969bbd742
+	github.com/brancz/gojsontoyaml v0.1.0
 	github.com/brancz/kube-rbac-proxy v0.5.0
 	github.com/campoy/embedmd v1.0.0
 	github.com/cloudflare/cfssl v1.4.1
