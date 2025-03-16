@@ -110,6 +110,8 @@ github.com/brancz/kube-rbac-proxy v0.5.0 h1:RdMeazKvTXwH66i9DeVtEV/o0XAqyhSaiWkZ
 github.com/brancz/kube-rbac-proxy v0.5.0/go.mod h1:cL2VjiIFGS90Cjh5ZZ8+It6tMcBt8rwvuw2J6Mamnl0=
 github.com/campoy/embedmd v1.0.0 h1:V4kI2qTJJLf4J29RzI/MAt2c3Bl4dQSYPuflzwFH2hY=
 github.com/campoy/embedmd v1.0.0/go.mod h1:oxyr9RCiSXg0M3VJ3ks0UGfp98BpSSGr0kpiX3MzVl8=
+github.com/campoy/embedmd/v2 v2.0.0 h1:txb59k86E+Wj4prKjwl6olSVWJmx52EhZH5jJIcE56U=
+github.com/campoy/embedmd/v2 v2.0.0/go.mod h1:YJ3HmaI8Vzp7/afY+uNjQkUOjCDozCEB6k5i9vQDcPM=
 github.com/casbin/casbin/v2 v2.1.2/go.mod h1:YcPU1XXisHhLzuxH9coDNf2FbKpjGlbCg3n9yuLkIJQ=
 github.com/cenkalti/backoff v0.0.0-20181003080854-62661b46c409/go.mod h1:90ReRw6GdpyfrHakVjL/QHaoyV4aDUVVkXQJJJ3NXXM=
 github.com/cenkalti/backoff v2.2.1+incompatible h1:tNowT99t7UNflLxfYYSlKYsBpXdEet03Pg2g16Swow4=
