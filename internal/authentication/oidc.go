@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"golang.org/x/oauth2"
 )
 
