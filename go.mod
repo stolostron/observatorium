@@ -37,7 +37,7 @@ require (
 require github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
 
 require (
-	cloud.google.com/go v0.65.0 // indirect
+	cloud.google.com/go v0.120.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/beevik/etree v1.1.0 // indirect
