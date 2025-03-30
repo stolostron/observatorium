@@ -9,7 +9,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-kit/kit v0.13.0
-	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/metalmatze/signal v0.0.0-20210307161603-1c9aa721a97a
 	github.com/oklog/run v1.1.0
 	github.com/prometheus/client_golang v1.11.1
