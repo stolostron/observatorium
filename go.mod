@@ -1,6 +1,8 @@
 module github.com/observatorium/observatorium
 
-go 1.21
+go 1.22
+
+toolchain go1.22.9
 
 require (
 	github.com/brancz/kube-rbac-proxy v0.5.0
@@ -52,7 +54,7 @@ require (
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
-	google.golang.org/protobuf v1.36.4 // indirect
+	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
 	k8s.io/apimachinery v0.18.0 // indirect
 	k8s.io/klog v1.0.0 // indirect
