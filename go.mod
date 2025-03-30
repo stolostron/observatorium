@@ -1,6 +1,8 @@
 module github.com/observatorium/observatorium
 
-go 1.18
+go 1.21.0
+
+toolchain go1.22.9
 
 require (
 	github.com/brancz/gojsontoyaml v0.0.0-20191212081931-bf2969bbd742
@@ -38,6 +40,7 @@ require github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // in
 
 require (
 	cloud.google.com/go v0.65.0 // indirect
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/beevik/etree v1.1.0 // indirect
@@ -51,7 +54,7 @@ require (
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.0 // indirect
-	github.com/go-sql-driver/mysql v1.5.0 // indirect
+	github.com/go-sql-driver/mysql v1.9.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/snappy v0.0.3 // indirect
