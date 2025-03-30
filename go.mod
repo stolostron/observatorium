@@ -53,7 +53,7 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/protobuf v1.36.4 // indirect
-	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
+	gopkg.in/go-jose/go-jose.v4 v4.0.5 // indirect
 	k8s.io/apimachinery v0.18.0 // indirect
 	k8s.io/klog v1.0.0 // indirect
 )
