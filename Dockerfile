@@ -1,4 +1,4 @@
-FROM registry.ci.openshift.org/stolostron/builder:go1.18-linux AS builder
+FROM registry.ci.openshift.org/stolostron/builder:go1.23-linux AS builder
 
 ADD go.mod /opt/go.mod
 ADD go.sum /opt/go.sum
