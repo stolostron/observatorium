@@ -15,7 +15,7 @@ WORKDIR /opt
 
 RUN git update-index --refresh; make observatorium
 
-FROM registry.access.redhat.com/ubi8/ubi-minimal:latest AS runner
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest AS runner
 
 COPY --from=builder /opt/observatorium /bin/observatorium
 
