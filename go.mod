@@ -18,7 +18,7 @@ require (
 	github.com/prometheus/common v0.30.0
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/prometheus/prometheus v1.8.2-0.20200305080338-7164b58945bb
-	go.uber.org/automaxprocs v1.2.0
+	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/oauth2 v0.28.0
 	golang.org/x/sys v0.31.0 // indirect
