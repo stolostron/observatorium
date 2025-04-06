@@ -8,7 +8,7 @@ require (
 	github.com/brancz/gojsontoyaml v0.0.0-20191212081931-bf2969bbd742
 	github.com/brancz/kube-rbac-proxy v0.5.0
 	github.com/campoy/embedmd v1.0.0
-	github.com/cloudflare/cfssl v1.4.1
+	github.com/cloudflare/cfssl v1.6.5
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/dexidp/dex v0.0.0-20200512115545-709d4169d646
 	github.com/ghodss/yaml v1.0.0
