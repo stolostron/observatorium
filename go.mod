@@ -92,7 +92,7 @@ require (
 	github.com/zmap/zcrypto v0.0.0-20190729165852-9051775e6a2e // indirect
 	github.com/zmap/zlint v0.0.0-20190806154020-fd021b4cfbeb // indirect
 	go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738 // indirect
-	go.opencensus.io v0.22.4 // indirect
+	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/atomic v1.6.0 // indirect
 	go.uber.org/multierr v1.5.0 // indirect
 	go.uber.org/zap v1.14.1 // indirect
@@ -101,7 +101,7 @@ require (
 	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/api v0.30.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
-	google.golang.org/grpc v1.31.0 // indirect
+	google.golang.org/grpc v1.33.2 // indirect
 	google.golang.org/protobuf v1.26.0-rc.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
