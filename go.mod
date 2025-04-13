@@ -48,7 +48,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.0.0 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
@@ -86,7 +86,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.6.0 // indirect
-	github.com/spf13/cobra v0.0.5 // indirect
+	github.com/spf13/cobra v0.0.7 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/weppos/publicsuffix-go v0.5.0 // indirect
 	github.com/zmap/zcrypto v0.0.0-20190729165852-9051775e6a2e // indirect
