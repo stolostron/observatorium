@@ -32,11 +32,13 @@ require (
 	golang.org/x/oauth2 v0.28.0
 	golang.org/x/sys v0.31.0 // indirect
 	google.golang.org/genproto v0.0.0-20200825200019-8632dd797987 // indirect
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/component-base v0.18.0
 )
 
 require github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
+
+require gopkg.in/yaml.v2 v2.4.0 // indirect
 
 require (
 	cloud.google.com/go v0.65.0 // indirect
