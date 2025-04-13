@@ -54,7 +54,7 @@ require (
 	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/protobuf v1.36.4 // indirect
-	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
+	gopkg.in/go-jose/go-jose.v4 v4.1.0 // indirect
 	k8s.io/apimachinery v0.18.0 // indirect
 	k8s.io/klog v1.0.0 // indirect
 )
