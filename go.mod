@@ -7,7 +7,7 @@ toolchain go1.23.7
 require (
 	github.com/brancz/gojsontoyaml v0.0.0-20191212081931-bf2969bbd742
 	github.com/brancz/kube-rbac-proxy v0.5.0
-	github.com/campoy/embedmd v1.0.0
+	github.com/campoy/embedmd/v2 v2.0.0
 	github.com/cloudflare/cfssl v1.4.1
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/dexidp/dex v0.0.0-20200512115545-709d4169d646
@@ -37,6 +37,8 @@ require (
 )
 
 require github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
+
+require github.com/campoy/embedmd v1.0.0 // indirect
 
 require (
 	cloud.google.com/go v0.65.0 // indirect
