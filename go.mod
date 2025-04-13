@@ -114,6 +114,6 @@ require (
 replace (
 	// fix CVE-2022-24450
 	github.com/nats-io/nats-server/v2 => github.com/nats-io/nats-server/v2 v2.7.2
-	go.etcd.io/etcd => go.etcd.io/etcd v0.5.0-alpha.5.0.20200329194405-dd816f0735f8
+	go.etcd.io/etcd => go.etcd.io/etcd v2.3.8+incompatible
 	google.golang.org/grpc => google.golang.org/grpc v1.27.0
 )
