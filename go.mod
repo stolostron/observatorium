@@ -44,7 +44,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
-	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/weppos/publicsuffix-go v0.5.0 // indirect
@@ -53,7 +53,7 @@ require (
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
-	google.golang.org/protobuf v1.36.4 // indirect
+	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
 	k8s.io/apimachinery v0.18.0 // indirect
 	k8s.io/klog v1.0.0 // indirect
