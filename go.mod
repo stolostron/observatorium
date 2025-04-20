@@ -89,7 +89,7 @@ require (
 	github.com/spf13/cobra v0.0.5 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/weppos/publicsuffix-go v0.5.0 // indirect
-	github.com/zmap/zcrypto v0.0.0-20190729165852-9051775e6a2e // indirect
+	github.com/zmap/zcrypto 7510c141e4b7 // indirect
 	github.com/zmap/zlint v0.0.0-20190806154020-fd021b4cfbeb // indirect
 	go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738 // indirect
 	go.opencensus.io v0.22.4 // indirect
