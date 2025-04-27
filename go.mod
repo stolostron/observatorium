@@ -33,7 +33,7 @@ require (
 	golang.org/x/sys v0.31.0 // indirect
 	google.golang.org/genproto v0.0.0-20200825200019-8632dd797987 // indirect
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/component-base v0.18.0
+	k8s.io/component-base v0.33.0
 )
 
 require github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
@@ -107,7 +107,7 @@ require (
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
 	gopkg.in/ldap.v2 v2.5.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.1 // indirect
-	k8s.io/apimachinery v0.18.0 // indirect
+	k8s.io/apimachinery v0.33.0 // indirect
 	k8s.io/klog v1.0.0 // indirect
 )
 
