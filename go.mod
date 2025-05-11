@@ -21,7 +21,7 @@ require (
 	go.uber.org/automaxprocs v1.2.0
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/oauth2 v0.28.0
-	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/component-base v0.18.0
 )
