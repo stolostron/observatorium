@@ -16,7 +16,7 @@ require (
 	github.com/go-kit/kit v0.10.0
 	github.com/go-pluto/styx v0.0.0-20200109161911-78a77eb717b4
 	github.com/golang/protobuf v1.4.3 // indirect
-	github.com/google/go-jsonnet v0.15.1-0.20200310221949-724650d358b6
+	github.com/google/go-jsonnet v0.21.0
 	github.com/grpc-ecosystem/grpc-gateway v1.14.3 // indirect
 	github.com/jsonnet-bundler/jsonnet-bundler v0.3.1
 	github.com/metalmatze/signal v0.0.0-20200616171423-be84551ba3ce
