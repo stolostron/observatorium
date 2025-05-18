@@ -23,7 +23,7 @@ require (
 	golang.org/x/oauth2 v0.28.0
 	golang.org/x/sys v0.31.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/component-base v0.18.0
+	k8s.io/component-base v0.33.1
 )
 
 require github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
@@ -55,7 +55,7 @@ require (
 	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/protobuf v1.36.4 // indirect
 	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
-	k8s.io/apimachinery v0.18.0 // indirect
+	k8s.io/apimachinery v0.33.1 // indirect
 	k8s.io/klog v1.0.0 // indirect
 )
 
