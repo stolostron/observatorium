@@ -15,7 +15,7 @@ require (
 	github.com/metalmatze/signal v0.0.0-20210307161603-1c9aa721a97a
 	github.com/oklog/run v1.1.0
 	github.com/prometheus/client_golang v1.11.1
-	github.com/prometheus/common v0.30.0
+	github.com/prometheus/common v0.64.0
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/prometheus/prometheus v1.8.2-0.20200305080338-7164b58945bb
 	go.uber.org/automaxprocs v1.2.0
