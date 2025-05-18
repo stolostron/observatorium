@@ -101,7 +101,7 @@ require (
 	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/api v0.30.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
-	google.golang.org/grpc v1.31.0 // indirect
+	google.golang.org/grpc v1.72.1 // indirect
 	google.golang.org/protobuf v1.26.0-rc.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
@@ -115,5 +115,5 @@ replace (
 	// fix CVE-2022-24450
 	github.com/nats-io/nats-server/v2 => github.com/nats-io/nats-server/v2 v2.7.2
 	go.etcd.io/etcd => go.etcd.io/etcd v0.5.0-alpha.5.0.20200329194405-dd816f0735f8
-	google.golang.org/grpc => google.golang.org/grpc v1.27.0
+	google.golang.org/grpc => google.golang.org/grpc v1.72.1
 )
