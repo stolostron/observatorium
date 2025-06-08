@@ -2,7 +2,7 @@ module github.com/observatorium/observatorium
 
 go 1.23.0
 
-toolchain go1.23.7
+toolchain go1.24.4
 
 require (
 	github.com/brancz/kube-rbac-proxy v0.5.0
