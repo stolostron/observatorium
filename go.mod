@@ -9,7 +9,7 @@ require (
 	github.com/brancz/kube-rbac-proxy v0.5.0
 	github.com/campoy/embedmd v1.0.0
 	github.com/cloudflare/cfssl v1.4.1
-	github.com/coreos/go-oidc v2.2.1+incompatible
+	github.com/coreos/go-oidc v2.3.0+incompatible
 	github.com/dexidp/dex v0.0.0-20200512115545-709d4169d646
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-chi/chi v4.0.2+incompatible
@@ -105,6 +105,7 @@ require (
 	google.golang.org/protobuf v1.26.0-rc.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
+	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
 	gopkg.in/ldap.v2 v2.5.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.1 // indirect
 	k8s.io/apimachinery v0.18.0 // indirect
