@@ -28,7 +28,7 @@ require (
 	github.com/prometheus/prometheus v1.8.2-0.20200305080338-7164b58945bb
 	github.com/urfave/cli v1.22.2 // indirect
 	go.uber.org/automaxprocs v1.2.0
-	golang.org/x/net v0.34.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/oauth2 v0.28.0
 	golang.org/x/sys v0.31.0 // indirect
 	google.golang.org/genproto v0.0.0-20200825200019-8632dd797987 // indirect
@@ -68,7 +68,7 @@ require (
 	github.com/jonboulle/clockwork v0.1.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.11 // indirect
-	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
@@ -85,11 +85,11 @@ require (
 	github.com/russellhaering/goxmldsig v0.0.0-20180430223755-7acd5e4a6ef7 // indirect
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
-	github.com/sirupsen/logrus v1.6.0 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/cobra v0.0.5 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/weppos/publicsuffix-go v0.5.0 // indirect
-	github.com/zmap/zcrypto v0.0.0-20190729165852-9051775e6a2e // indirect
+	github.com/weppos/publicsuffix-go v0.40.3-0.20250127173806-e489a31678ca // indirect
+	github.com/zmap/zcrypto v0.0.0-20250129210703-03c45d0bae98 // indirect
 	github.com/zmap/zlint v0.0.0-20190806154020-fd021b4cfbeb // indirect
 	go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738 // indirect
 	go.opencensus.io v0.22.4 // indirect
