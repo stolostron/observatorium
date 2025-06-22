@@ -25,7 +25,6 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/common v0.30.0
 	github.com/prometheus/procfs v0.6.0 // indirect
-	github.com/prometheus/prometheus v1.8.2-0.20200305080338-7164b58945bb
 	github.com/urfave/cli v1.22.2 // indirect
 	go.uber.org/automaxprocs v1.2.0
 	golang.org/x/net v0.34.0 // indirect
@@ -37,6 +36,8 @@ require (
 )
 
 require github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
+
+require github.com/prometheus/prometheus v1.8.2-0.20200305080338-7164b58945bb
 
 require (
 	cloud.google.com/go v0.65.0 // indirect
