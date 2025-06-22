@@ -15,7 +15,7 @@ require (
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-kit/kit v0.10.0
 	github.com/go-pluto/styx v0.0.0-20200109161911-78a77eb717b4
-	github.com/golang/protobuf v1.4.3 // indirect
+	github.com/golang/protobuf v1.5.0 // indirect
 	github.com/google/go-jsonnet v0.15.1-0.20200310221949-724650d358b6
 	github.com/grpc-ecosystem/grpc-gateway v1.14.3 // indirect
 	github.com/jsonnet-bundler/jsonnet-bundler v0.3.1
@@ -102,7 +102,7 @@ require (
 	google.golang.org/api v0.30.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/grpc v1.31.0 // indirect
-	google.golang.org/protobuf v1.26.0-rc.1 // indirect
+	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
 	gopkg.in/ldap.v2 v2.5.1 // indirect
