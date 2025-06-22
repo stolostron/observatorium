@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.23.7
 
 require (
-	github.com/brancz/gojsontoyaml v0.0.0-20191212081931-bf2969bbd742
+	github.com/brancz/gojsontoyaml v0.1.0
 	github.com/brancz/kube-rbac-proxy v0.5.0
 	github.com/campoy/embedmd v1.0.0
 	github.com/cloudflare/cfssl v1.4.1
