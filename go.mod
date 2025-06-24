@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.23.7
 
 require (
-	github.com/brancz/kube-rbac-proxy v0.5.0
+	github.com/brancz/kube-rbac-proxy v0.19.1
 	github.com/cloudflare/cfssl v1.4.1
 	github.com/coreos/go-oidc v2.3.0+incompatible
 	github.com/ghodss/yaml v1.0.0
