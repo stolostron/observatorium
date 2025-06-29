@@ -21,7 +21,7 @@ require (
 	github.com/jsonnet-bundler/jsonnet-bundler v0.3.1
 	github.com/metalmatze/signal v0.0.0-20200616171423-be84551ba3ce
 	github.com/observatorium/up v0.0.0-20200603110215-8a20b4e48ac0
-	github.com/oklog/run v1.1.0
+	github.com/oklog/run v1.2.0
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/common v0.30.0
 	github.com/prometheus/procfs v0.6.0 // indirect
