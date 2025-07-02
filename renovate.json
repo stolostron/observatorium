@@ -1,8 +1,9 @@
 {
   "baseBranches": ["main", "/^release-\\d+\\.\\d+/"],
-   "gomod": {
+  "gomod": {
     "updatePinnedDependencies": false
-  }
+  },
+  "lockFileMaintenance": false,
   "autoApprove": true,
   "tekton": {
     "automerge": true,
