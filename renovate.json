@@ -1,11 +1,9 @@
 {
-  "extends": [
-    "github>konflux-ci/mintmaker//config/renovate/renovate.json"
-  ],
   "baseBranches": ["main", "/^release-\\d+\\.\\d+/"],
+   "gomod": {
+    "updatePinnedDependencies": false
+  }
   "autoApprove": true,
-  "updatePinnedDependencies": false,
-  "lockFileMaintenance": false,
   "tekton": {
     "automerge": true,
     "automergeStrategy": "rebase",
