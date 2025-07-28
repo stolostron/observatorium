@@ -48,7 +48,6 @@ Compatible backends must implement the Loki write API, e.g. Loki.
 
 ## Usage
 
-[embedmd]:# (tmp/help.txt)
 ```txt
 Usage of ./observatorium:
   -debug.block-profile-rate int
@@ -101,4 +100,4 @@ Usage of ./observatorium:
     	The address on which the public server listens. (default ":8080")
 ```
 
-Rebuild Image: Thu Sep 22 11:10:35 EDT 2022
+Rebuild Image: Mon Jul 28 09:29:07 EDT 2025
