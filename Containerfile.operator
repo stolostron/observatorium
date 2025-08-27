@@ -27,9 +27,11 @@ ARG VERSION
 ARG VCS_REF
 ARG DOCKERFILE_PATH
 
-LABEL vendor="Observatorium" \
+LABEL com.redhat.component="observatorium" \
     name="observatorium/observatorium" \
+    summary="observatorium-acm" \
     description="Observatorium API" \
+    io.openshift.tags="observability" \
     io.k8s.display-name="observatorium/observatorium" \
     io.k8s.description="Observatorium API" \
     maintainer="Observatorium <team-monitoring@redhat.com>" \
@@ -43,7 +45,7 @@ LABEL vendor="Observatorium" \
     org.label-schema.vcs-branch=$VCS_BRANCH \
     org.label-schema.vcs-ref=$VCS_REF \
     org.label-schema.vcs-url="https://github.com/observatorium/observatorium" \
-    org.label-schema.vendor="observatorium/observatorium" \
+    org.label-schema.vendor="Red Hat, Inc" \
     org.label-schema.version=$VERSION
 
 ENTRYPOINT ["/bin/observatorium"]
