@@ -19,7 +19,8 @@ ARG VCS_REF
 ARG DOCKERFILE_PATH
 
 LABEL com.redhat.component="observatorium" \
-    name="observatorium/observatorium" \
+    name="rhacm2/observatorium-rhel9" \
+    cpe="cpe:/a:redhat:acm:2.16::el9" \
     summary="observatorium-acm" \
     description="Observatorium API" \
     io.openshift.tags="observability" \
