@@ -29,7 +29,6 @@ import (
 	"github.com/metalmatze/signal/internalserver"
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/common/version"
 	"go.uber.org/automaxprocs/maxprocs"
 	yamlv2 "gopkg.in/yaml.v2"
 
@@ -227,7 +226,7 @@ func main() {
 
 	reg := prometheus.NewRegistry()
 	reg.MustRegister(
-		version.NewCollector("observatorium"),
+		prometheus.NewBuildInfoCollector(),
 		prometheus.NewGoCollector(),
 		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
 	)
