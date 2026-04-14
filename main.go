@@ -33,6 +33,7 @@ import (
 	yamlv2 "gopkg.in/yaml.v2"
 
 	"github.com/observatorium/observatorium/internal"
+	"github.com/observatorium/observatorium/internal/alertmanager"
 	logsv1 "github.com/observatorium/observatorium/internal/api/logs/v1"
 	metricslegacy "github.com/observatorium/observatorium/internal/api/metrics/legacy"
 	metricsv1 "github.com/observatorium/observatorium/internal/api/metrics/v1"
@@ -51,11 +52,12 @@ type config struct {
 	rbacConfigPath    string
 	tenantsConfigPath string
 
-	debug   debugConfig
-	server  serverConfig
-	tls     tlsConfig
-	metrics metricsConfig
-	logs    logsConfig
+	debug        debugConfig
+	server       serverConfig
+	tls          tlsConfig
+	metrics      metricsConfig
+	logs         logsConfig
+	alertmanager alertmanagerConfig
 }
 
 type debugConfig struct {
@@ -91,6 +93,13 @@ type metricsConfig struct {
 	upstreamWriteTimeout     time.Duration
 	additionalWriteEndpoints []remotewrite.Endpoint
 	tenantHeader             string
+}
+
+type alertmanagerConfig struct {
+	endpointsConfigPath string
+	tenantHeader        string
+	upstreamTimeout     time.Duration
+	enabled             bool
 }
 
 type logsConfig struct {
@@ -383,6 +392,37 @@ func main() {
 
 			})
 
+			if cfg.alertmanager.enabled {
+				endpointLoader, err := alertmanager.NewEndpointLoader(cfg.alertmanager.endpointsConfigPath)
+				if err != nil {
+					stdlog.Fatalf("failed to create endpoint loader for alertmanager fanout: %v", err)
+				}
+				ctx, cancel := context.WithCancel(context.Background())
+				defer cancel()
+				g.Add(func() error {
+					return endpointLoader.Run(ctx, gracePeriod)
+				}, func(error) {
+					cancel()
+				})
+				r.Group(func(r chi.Router) {
+					// r.Use(authentication.WithTenantMiddlewares(oidcTenantMiddlewares, authentication.NewMTLS(mTLSs)))
+					// r.Use(middleware.Timeout(cfg.alertmanager.upstreamTimeout))
+					r.Use(authentication.WithTenantHeader(cfg.alertmanager.tenantHeader, tenantIDs))
+
+					alertmanagerHandler := alertmanager.NewHandler(
+						endpointLoader,
+						alertmanager.Logger(logger),
+						alertmanager.Registry(reg),
+						alertmanager.WriteMiddleware(authorization.WithAuthorizer(authorizer, rbac.Write, "alertmanager")),
+					)
+					r.Mount("/api/alertmanager/v2/{tenant}",
+						stripTenantPrefix("/api/alertmanager/v2",
+							alertmanagerHandler,
+						),
+					)
+				})
+			}
+
 			// Logs
 			if cfg.logs.enabled {
 				r.Group(func(r chi.Router) {
@@ -563,6 +603,12 @@ func parseFlags() (config, error) {
 			" Note that TLS 1.3 ciphersuites are not configurable.")
 	flag.DurationVar(&cfg.tls.reloadInterval, "tls.reload-interval", time.Minute,
 		"The interval at which to watch for TLS certificate changes.")
+	flag.StringVar(&cfg.alertmanager.endpointsConfigPath, "alertmanager.endpoints-config", "",
+		"Path to the alertmanager endpoints configuration file.")
+	flag.StringVar(&cfg.alertmanager.tenantHeader, "alertmanager.tenant-header", "THANOS-TENANT",
+		"The name of the HTTP header containing the tenant ID to forward to alertmanager.")
+	flag.DurationVar(&cfg.alertmanager.upstreamTimeout, "alertmanager.upstream-timeout", metricsMiddlewareTimeout,
+		"The HTTP timeout for proxied requests to alertmanager endpoints.")
 	flag.Parse()
 
 	metricsReadEndpoint, err := url.ParseRequestURI(rawMetricsReadEndpoint)
@@ -612,6 +658,11 @@ func parseFlags() (config, error) {
 		}
 
 		cfg.logs.tailEndpoint = logsTailEndpoint
+	}
+
+	// TODO check what this does
+	if cfg.alertmanager.endpointsConfigPath != "" {
+		cfg.alertmanager.enabled = true
 	}
 
 	if rawLogsWriteEndpoint != "" {

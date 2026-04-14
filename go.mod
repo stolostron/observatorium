@@ -26,6 +26,8 @@ require (
 
 require github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
 
+require github.com/fsnotify/fsnotify v1.9.0
+
 require (
 	github.com/OneOfOne/xxhash v1.2.8 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

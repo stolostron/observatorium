@@ -279,14 +279,14 @@ function(params) {
                      },
                    ] else []
                  ) else []) + (
-                   if std.objectHas(api.config, 'additionalWriteEndpoints') then [
-                     {
-                       name: 'endpoint-config',
-                       mountPath: '/var/run/config/endpoints.yaml',
-                       subPath: 'endpoints.yaml',
-                       readOnly: true,
-                     },
-                   ] + (
+                  if std.objectHas(api.config, 'additionalWriteEndpoints') then [
+                    {
+                      name: 'endpoint-config',
+                      mountPath: '/var/run/config/endpoints.yaml',
+                      subPath: 'endpoints.yaml',
+                      readOnly: true,
+                    },
+                  ] + (
                     if std.objectHas(api.config.additionalWriteEndpoints, 'mountSecrets') then [
                       {
                         name: name,
@@ -294,9 +294,20 @@ function(params) {
                         readOnly: true,
                       }
                       for name in api.config.additionalWriteEndpoints.mountSecrets
-                    ] else [])
-                   else []
-                 ),
+                    ] else []
+                  )
+                  else []
+                ) + (
+                  if std.objectHas(api.config, 'extraVolumeMounts') then [
+                    {
+                      name: mount.name,
+                      mountPath: mount.mountPath,
+                      subPath: mount.key,
+                      readOnly: true,
+                    }
+                    for mount in api.config.extraVolumeMounts
+                  ] else []
+                ),
             },
           ],
           volumes:
@@ -360,23 +371,33 @@ function(params) {
                ] else []
              ) else []) +
             (if std.objectHas(api.config, 'additionalWriteEndpoints') then [
-               {
-                 secret: {
-                   secretName: api.config.additionalWriteEndpoints.endpointsConfigSecret,
-                 },
-                 name: 'endpoint-config',
-               },
-             ] +
-              (if std.objectHas(api.config.additionalWriteEndpoints, 'mountSecrets') then [
-                {
-                  secret: {
-                    secretName: name,
-                  },
-                  name: name,
-                }
-                for name in api.config.additionalWriteEndpoints.mountSecrets
-              ] else [])
-             else []),
+                                                                             {
+                                                                               secret: {
+                                                                                 secretName: api.config.additionalWriteEndpoints.endpointsConfigSecret,
+                                                                               },
+                                                                               name: 'endpoint-config',
+                                                                             },
+                                                                           ] +
+                                                                           (if std.objectHas(api.config.additionalWriteEndpoints, 'mountSecrets') then [
+                                                                              {
+                                                                                secret: {
+                                                                                  secretName: name,
+                                                                                },
+                                                                                name: name,
+                                                                              }
+                                                                              for name in api.config.additionalWriteEndpoints.mountSecrets
+                                                                            ] else [])
+             else []) +
+            (if std.objectHas(api.config, 'extraVolumeMounts') then [
+               if mount.type == 'configMap' then {
+                 name: mount.name,
+                 configMap: { name: mount.name },
+               } else {
+                 name: mount.name,
+                 secret: { secretName: mount.name },
+               }
+               for mount in api.config.extraVolumeMounts
+             ] else []),
         },
       },
     },
