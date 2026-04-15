@@ -302,7 +302,6 @@ function(params) {
                     {
                       name: mount.name,
                       mountPath: mount.mountPath,
-                      subPath: mount.key,
                       readOnly: true,
                     }
                     for mount in api.config.extraVolumeMounts

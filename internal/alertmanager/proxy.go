@@ -35,7 +35,7 @@ func newHTTPClient(ep resolvedEndpoint) (*http.Client, error) {
 
 func fanoutAlert(loader *EndpointLoader, logger log.Logger, registry *prometheus.Registry) http.Handler {
 	requests := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name:        "http_alert_requests_total",
+		Name:        "http_alert_fanout_requests_total",
 		Help:        "Counter of alert HTTP requests.",
 		ConstLabels: prometheus.Labels{"fanout": "fanoutv1-write"},
 	}, []string{"method"})

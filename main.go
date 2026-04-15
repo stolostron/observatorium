@@ -603,7 +603,8 @@ func parseFlags() (config, error) {
 			" Note that TLS 1.3 ciphersuites are not configurable.")
 	flag.DurationVar(&cfg.tls.reloadInterval, "tls.reload-interval", time.Minute,
 		"The interval at which to watch for TLS certificate changes.")
-	flag.StringVar(&cfg.alertmanager.endpointsConfigPath, "alertmanager.endpoints-config", "",
+	// TODO change later to match what api.config.rbac and api.config.tenants is doing so alertmanager-fanout stays opt in
+	flag.StringVar(&cfg.alertmanager.endpointsConfigPath, "alertmanager.endpoints-config", "/etc/observatorium/alertmanager-endpoints/alertmanager-endpoints.yaml",
 		"Path to the alertmanager endpoints configuration file.")
 	flag.StringVar(&cfg.alertmanager.tenantHeader, "alertmanager.tenant-header", "THANOS-TENANT",
 		"The name of the HTTP header containing the tenant ID to forward to alertmanager.")
@@ -660,7 +661,7 @@ func parseFlags() (config, error) {
 		cfg.logs.tailEndpoint = logsTailEndpoint
 	}
 
-	// TODO check what this does
+	// TODO check that this flag makes sense and that it is being used
 	if cfg.alertmanager.endpointsConfigPath != "" {
 		cfg.alertmanager.enabled = true
 	}
