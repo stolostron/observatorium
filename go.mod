@@ -16,10 +16,10 @@ require (
 	github.com/prometheus/common v0.63.0
 	github.com/prometheus/procfs v0.16.0 // indirect
 	github.com/prometheus/prometheus v1.8.2-0.20200305080338-7164b58945bb
-	go.uber.org/automaxprocs v1.2.0
+	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/oauth2 v0.34.0
-	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/component-base v0.18.0
 )
@@ -35,9 +35,9 @@ require (
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/certificate-transparency-go v1.0.21 // indirect
+	github.com/google/certificate-transparency-go v1.1.2 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
-	github.com/klauspost/compress v1.18.0 // indirect
+	github.com/klauspost/compress v1.18.3 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
@@ -49,9 +49,9 @@ require (
 	github.com/weppos/publicsuffix-go v0.5.0 // indirect
 	github.com/zmap/zcrypto v0.0.0-20190729165852-9051775e6a2e // indirect
 	github.com/zmap/zlint v0.0.0-20190806154020-fd021b4cfbeb // indirect
-	golang.org/x/crypto v0.46.0 // indirect
+	golang.org/x/crypto v0.47.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/text v0.32.0 // indirect
+	golang.org/x/text v0.33.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
 	k8s.io/apimachinery v0.18.0 // indirect
