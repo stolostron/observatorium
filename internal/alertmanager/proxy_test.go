@@ -70,7 +70,7 @@ func TestFanoutAlert_SendsToAllEndpoints(t *testing.T) {
 	endpoints := make([]resolvedEndpoint, 3)
 	for i := range backends {
 		backends[i] = newFakeBackend(t)
-		endpoints[i] = resolvedEndpoint{Endpoint: Endpoint{Name: fmt.Sprintf("backend-%d", i), URL: backends[i].url()}}
+		endpoints[i] = resolvedEndpoint{Endpoint: Endpoint{Name: fmt.Sprintf("backend-%d", i), URL: backends[i].url()}, client: backends[i].server.Client()}
 	}
 
 	loader := &EndpointLoader{
@@ -126,7 +126,7 @@ func TestFanoutAlert_AppendsRequestPath(t *testing.T) {
 	backend := newFakeBackend(t)
 	loader := &EndpointLoader{
 		endpoints: []resolvedEndpoint{
-			{Endpoint: Endpoint{Name: "ep", URL: backend.url()}},
+			{Endpoint: Endpoint{Name: "ep", URL: backend.url()}, client: backend.server.Client()},
 		},
 	}
 
@@ -164,7 +164,7 @@ func TestFanoutAlert_ReloadEndpoints(t *testing.T) {
 	oldEndpoints := make([]resolvedEndpoint, 2)
 	for i := range oldBackends {
 		oldBackends[i] = newFakeBackend(t)
-		oldEndpoints[i] = resolvedEndpoint{Endpoint: Endpoint{Name: fmt.Sprintf("old-%d", i), URL: oldBackends[i].url()}}
+		oldEndpoints[i] = resolvedEndpoint{Endpoint: Endpoint{Name: fmt.Sprintf("old-%d", i), URL: oldBackends[i].url()}, client: oldBackends[i].server.Client()}
 	}
 
 	loader := &EndpointLoader{
@@ -184,7 +184,7 @@ func TestFanoutAlert_ReloadEndpoints(t *testing.T) {
 	newEndpoints := make([]resolvedEndpoint, 3)
 	for i := range newBackends {
 		newBackends[i] = newFakeBackend(t)
-		newEndpoints[i] = resolvedEndpoint{Endpoint: Endpoint{Name: fmt.Sprintf("new-%d", i), URL: newBackends[i].url()}}
+		newEndpoints[i] = resolvedEndpoint{Endpoint: Endpoint{Name: fmt.Sprintf("new-%d", i), URL: newBackends[i].url()}, client: newBackends[i].server.Client()}
 	}
 
 	loader.mu.Lock()

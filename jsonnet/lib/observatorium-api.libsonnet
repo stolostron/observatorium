@@ -18,7 +18,7 @@ local defaults = {
     internal: 8081,
   },
   resources: {},
-  serviceMonitor: false,
+  serviceMonitor: true,
   logs: {},
   rbac: {},
   tenants: {},
