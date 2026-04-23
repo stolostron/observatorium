@@ -398,21 +398,30 @@ func main() {
 					stdlog.Fatalf("failed to create endpoint loader for alertmanager fanout: %v", err)
 				}
 				ctx, cancel := context.WithCancel(context.Background())
-				defer cancel()
 				g.Add(func() error {
-					return endpointLoader.Run(ctx, gracePeriod)
+					level.Info(logger).Log("msg", "starting alertmanager endpoint loader")
+					err := endpointLoader.Run(ctx, gracePeriod)
+					if err != nil {
+						level.Error(logger).Log("msg", "alertmanager endpoint loader exited with error", "err", err)
+					} else {
+						level.Warn(logger).Log("msg", "alertmanager endpoint loader exited unexpectedly with no error")
+					}
+					return err
 				}, func(error) {
+					level.Info(logger).Log("msg", "alertmanager endpoint loader interrupted, cancelling context")
 					cancel()
 				})
 				r.Group(func(r chi.Router) {
-					// r.Use(authentication.WithTenantMiddlewares(oidcTenantMiddlewares, authentication.NewMTLS(mTLSs)))
-					// r.Use(middleware.Timeout(cfg.alertmanager.upstreamTimeout))
+					r.Use(authentication.WithTenantMiddlewares(oidcTenantMiddlewares, authentication.NewMTLS(mTLSs)))
+					r.Use(middleware.Timeout(cfg.alertmanager.upstreamTimeout))
+					// TODO check what this tenant header is doing
 					r.Use(authentication.WithTenantHeader(cfg.alertmanager.tenantHeader, tenantIDs))
 
 					alertmanagerHandler := alertmanager.NewHandler(
 						endpointLoader,
 						alertmanager.Logger(logger),
 						alertmanager.Registry(reg),
+						// TODO check middleware for resource
 						alertmanager.WriteMiddleware(authorization.WithAuthorizer(authorizer, rbac.Write, "alertmanager")),
 					)
 					r.Mount("/api/alertmanager/v2/{tenant}",
@@ -603,7 +612,6 @@ func parseFlags() (config, error) {
 			" Note that TLS 1.3 ciphersuites are not configurable.")
 	flag.DurationVar(&cfg.tls.reloadInterval, "tls.reload-interval", time.Minute,
 		"The interval at which to watch for TLS certificate changes.")
-	// TODO change later to match what api.config.rbac and api.config.tenants is doing so alertmanager-fanout stays opt in
 	flag.StringVar(&cfg.alertmanager.endpointsConfigPath, "alertmanager.endpoints-config", "/etc/observatorium/alertmanager-endpoints/alertmanager-endpoints.yaml",
 		"Path to the alertmanager endpoints configuration file.")
 	flag.StringVar(&cfg.alertmanager.tenantHeader, "alertmanager.tenant-header", "THANOS-TENANT",
