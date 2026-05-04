@@ -2,7 +2,6 @@ package alertmanager
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -67,10 +66,10 @@ func (fb *fakeBackend) path() string {
 
 func TestFanoutAlert_SendsToAllEndpoints(t *testing.T) {
 	backends := make([]*fakeBackend, 3)
-	endpoints := make([]resolvedEndpoint, 3)
+	endpoints := make([]Endpoint, 3)
 	for i := range backends {
 		backends[i] = newFakeBackend(t)
-		endpoints[i] = resolvedEndpoint{Endpoint: Endpoint{Name: fmt.Sprintf("backend-%d", i), URL: backends[i].url()}, client: backends[i].server.Client()}
+		endpoints[i] = Endpoint{URL: backends[i].url(), client: backends[i].server.Client()}
 	}
 
 	loader := &EndpointLoader{
@@ -125,8 +124,8 @@ func TestFanoutAlert_SendsToAllEndpoints(t *testing.T) {
 func TestFanoutAlert_AppendsRequestPath(t *testing.T) {
 	backend := newFakeBackend(t)
 	loader := &EndpointLoader{
-		endpoints: []resolvedEndpoint{
-			{Endpoint: Endpoint{Name: "ep", URL: backend.url()}, client: backend.server.Client()},
+		endpoints: []Endpoint{
+			{URL: backend.url(), client: backend.server.Client()},
 		},
 	}
 
@@ -161,10 +160,10 @@ func TestFanoutAlert_EmptyEndpoints(t *testing.T) {
 
 func TestFanoutAlert_ReloadEndpoints(t *testing.T) {
 	oldBackends := make([]*fakeBackend, 2)
-	oldEndpoints := make([]resolvedEndpoint, 2)
+	oldEndpoints := make([]Endpoint, 2)
 	for i := range oldBackends {
 		oldBackends[i] = newFakeBackend(t)
-		oldEndpoints[i] = resolvedEndpoint{Endpoint: Endpoint{Name: fmt.Sprintf("old-%d", i), URL: oldBackends[i].url()}, client: oldBackends[i].server.Client()}
+		oldEndpoints[i] = Endpoint{URL: oldBackends[i].url(), client: oldBackends[i].server.Client()}
 	}
 
 	loader := &EndpointLoader{
@@ -181,10 +180,10 @@ func TestFanoutAlert_ReloadEndpoints(t *testing.T) {
 	waitForBackends(t, oldBackends, 1)
 
 	newBackends := make([]*fakeBackend, 3)
-	newEndpoints := make([]resolvedEndpoint, 3)
+	newEndpoints := make([]Endpoint, 3)
 	for i := range newBackends {
 		newBackends[i] = newFakeBackend(t)
-		newEndpoints[i] = resolvedEndpoint{Endpoint: Endpoint{Name: fmt.Sprintf("new-%d", i), URL: newBackends[i].url()}, client: newBackends[i].server.Client()}
+		newEndpoints[i] = Endpoint{URL: newBackends[i].url(), client: newBackends[i].server.Client()}
 	}
 
 	loader.mu.Lock()

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
 	"io"
 	stdlog "log"
 	"net"
@@ -68,7 +67,7 @@ func fanoutAlert(loader *EndpointLoader, logger log.Logger, registry *prometheus
 		Name:        "alert_fanout_requests_total",
 		Help:        "Counter of fanout requests.",
 		ConstLabels: prometheus.Labels{"fanout": "fanoutv1-write"},
-	}, []string{"code", "name"})
+	}, []string{"code", "url"})
 
 	registry.MustRegister(requests, fanoutRequests)
 
@@ -82,9 +81,7 @@ func fanoutAlert(loader *EndpointLoader, logger log.Logger, registry *prometheus
 		rlogger := log.With(logger, "request", middleware.GetReqID(r.Context()))
 
 		endpoints := loader.GetEndpoints()
-		level.Info(rlogger).Log("msg", "fanout alert called", "method", r.Method, "path", r.URL.Path, "endpoint_count", len(endpoints), "body_size", len(body))
 		if len(endpoints) == 0 {
-			level.Warn(rlogger).Log("msg", "no alertmanager endpoints loaded, returning 400")
 			http.Error(w, "alertmanager endpoints not loaded", http.StatusBadRequest)
 			return
 		}
@@ -92,11 +89,16 @@ func fanoutAlert(loader *EndpointLoader, logger log.Logger, registry *prometheus
 			wg         sync.WaitGroup
 			successCnt atomic.Int32
 		)
+
+		// todo add more error handling
+		// Incorporate use of logchannels?
+		// What if one request fails?
+		// what if 2/3 requests fail?
+		// have a primary endpoint to send alerts to?
 		for _, ep := range endpoints {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				level.Info(rlogger).Log("msg", "dispatching alert to endpoint", "endpoint", ep.Name, "url", ep.URL)
 				targetUrl, err := url.JoinPath(ep.URL, r.URL.Path)
 				if err != nil {
 					level.Error(rlogger).Log("msg", "failed to get url", "err", err, "url", targetUrl)
@@ -104,25 +106,24 @@ func fanoutAlert(loader *EndpointLoader, logger log.Logger, registry *prometheus
 				}
 				req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, targetUrl, bytes.NewBuffer(body))
 				if err != nil {
-					level.Error(rlogger).Log("msg", "failed to create forward request", "err", err, "url", ep.URL)
+					level.Error(rlogger).Log("msg", "failed to create fanout request", "err", err, "url", ep.URL)
 					return
 				}
 				req.Header = r.Header.Clone()
 
 				resp, err := ep.client.Do(req)
 				if err != nil {
-					fanoutRequests.With(prometheus.Labels{"code": "<error>", "name": ep.Name}).Inc()
 					level.Error(rlogger).Log("msg", "failed to send request", "err", err, "url", ep.URL)
+					fanoutRequests.With(prometheus.Labels{"code": "<error>", "url": ep.URL}).Inc()
 					return
 				}
 				defer resp.Body.Close()
-				fanoutRequests.With(prometheus.Labels{"code": strconv.Itoa(resp.StatusCode), "name": ep.Name}).Inc()
+				fanoutRequests.With(prometheus.Labels{"code": strconv.Itoa(resp.StatusCode), "url": ep.URL}).Inc()
 				if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 					respBody, _ := io.ReadAll(resp.Body)
-					level.Error(rlogger).Log("msg", "failed to forward alert", "code", resp.Status, "response", string(respBody), "url", ep.URL)
+					level.Error(rlogger).Log("msg", "failed to fanout alert", "code", resp.Status, "response", string(respBody), "url", ep.URL)
 				} else {
 					successCnt.Add(1)
-					level.Debug(rlogger).Log("msg", "alert forwarded successfully", "url", ep.URL)
 				}
 			}()
 		}
@@ -131,16 +132,16 @@ func fanoutAlert(loader *EndpointLoader, logger log.Logger, registry *prometheus
 
 		total := int32(len(endpoints))
 		succeeded := successCnt.Load()
-		failed := total - succeeded
 
-		if succeeded == 0 {
+		switch succeeded {
+		case total:
+			w.WriteHeader(http.StatusOK)
+		case 0:
 			level.Error(rlogger).Log("msg", "fanout complete, all endpoints failed", "total", total)
 			http.Error(w, "all alertmanager endpoints failed", http.StatusBadGateway)
-			return
+		default:
+			level.Error(rlogger).Log("msg", "Unable to fanout, only succeeding on subset of endpoints")
+			w.WriteHeader(http.StatusOK)
 		}
-		fmt.Printf("msg: fanout complete, total: %d, succeeded: %d, failed: %d\n", total, succeeded, failed)
-		level.Info(rlogger).Log("msg", "fanout complete", "total", total, "succeeded", succeeded, "failed", failed)
-		w.WriteHeader(http.StatusOK)
-
 	})
 }
