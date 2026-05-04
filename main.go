@@ -96,10 +96,21 @@ type metricsConfig struct {
 }
 
 type alertmanagerConfig struct {
-	endpointsConfigPath string
-	tenantHeader        string
-	upstreamTimeout     time.Duration
-	enabled             bool
+	endpoints       []*url.URL
+	tenantHeader    string
+	upstreamTimeout time.Duration
+	enabled         bool
+}
+
+type alertmanagerEndpoints []string
+
+func (am *alertmanagerEndpoints) String() string {
+	return strings.Join(*am, ",")
+}
+
+func (am *alertmanagerEndpoints) Set(endpoint string) error {
+	*am = append(*am, endpoint)
+	return nil
 }
 
 type logsConfig struct {
@@ -393,35 +404,17 @@ func main() {
 			})
 
 			if cfg.alertmanager.enabled {
-				endpointLoader, err := alertmanager.NewEndpointLoader(cfg.alertmanager.endpointsConfigPath)
-				if err != nil {
-					stdlog.Fatalf("failed to create endpoint loader for alertmanager fanout: %v", err)
-				}
-				ctx, cancel := context.WithCancel(context.Background())
-				g.Add(func() error {
-					level.Info(logger).Log("msg", "starting alertmanager endpoint loader")
-					err := endpointLoader.Run(ctx, gracePeriod)
-					if err != nil {
-						level.Error(logger).Log("msg", "alertmanager endpoint loader exited with error", "err", err)
-					} else {
-						level.Warn(logger).Log("msg", "alertmanager endpoint loader exited unexpectedly with no error")
-					}
-					return err
-				}, func(error) {
-					level.Info(logger).Log("msg", "alertmanager endpoint loader interrupted, cancelling context")
-					cancel()
-				})
+				endpointLoader := alertmanager.NewEndpointLoader(cfg.alertmanager.endpoints)
+
 				r.Group(func(r chi.Router) {
 					r.Use(authentication.WithTenantMiddlewares(oidcTenantMiddlewares, authentication.NewMTLS(mTLSs)))
 					r.Use(middleware.Timeout(cfg.alertmanager.upstreamTimeout))
-					// TODO check what this tenant header is doing
 					r.Use(authentication.WithTenantHeader(cfg.alertmanager.tenantHeader, tenantIDs))
 
 					alertmanagerHandler := alertmanager.NewHandler(
 						endpointLoader,
 						alertmanager.Logger(logger),
 						alertmanager.Registry(reg),
-						// TODO check middleware for resource
 						alertmanager.WriteMiddleware(authorization.WithAuthorizer(authorizer, rbac.Write, "alertmanager")),
 					)
 					r.Mount("/api/alertmanager/v2/{tenant}",
@@ -548,6 +541,7 @@ func parseFlags() (config, error) {
 		rawLogsReadEndpoint               string
 		rawLogsTailEndpoint               string
 		rawLogsWriteEndpoint              string
+		rawAlertmanagerEndpoints          alertmanagerEndpoints
 	)
 
 	cfg := config{}
@@ -612,8 +606,8 @@ func parseFlags() (config, error) {
 			" Note that TLS 1.3 ciphersuites are not configurable.")
 	flag.DurationVar(&cfg.tls.reloadInterval, "tls.reload-interval", time.Minute,
 		"The interval at which to watch for TLS certificate changes.")
-	flag.StringVar(&cfg.alertmanager.endpointsConfigPath, "alertmanager.endpoints-config", "/etc/observatorium/alertmanager-endpoints/alertmanager-endpoints.yaml",
-		"Path to the alertmanager endpoints configuration file.")
+	flag.Var(&rawAlertmanagerEndpoints, "metrics.alertmanager.endpoint",
+		"The endpoint to which alerts should be sent. May be repeated for multiple endpoints.")
 	flag.StringVar(&cfg.alertmanager.tenantHeader, "alertmanager.tenant-header", "THANOS-TENANT",
 		"The name of the HTTP header containing the tenant ID to forward to alertmanager.")
 	flag.DurationVar(&cfg.alertmanager.upstreamTimeout, "alertmanager.upstream-timeout", metricsMiddlewareTimeout,
@@ -669,9 +663,15 @@ func parseFlags() (config, error) {
 		cfg.logs.tailEndpoint = logsTailEndpoint
 	}
 
-	// TODO check that this flag makes sense and that it is being used
-	if cfg.alertmanager.endpointsConfigPath != "" {
+	if len(rawAlertmanagerEndpoints) > 0 {
 		cfg.alertmanager.enabled = true
+		for _, raw := range rawAlertmanagerEndpoints {
+			alertmanagerEndpoint, err := url.ParseRequestURI(raw)
+			if err != nil {
+				return cfg, fmt.Errorf("--metrics.alertmanager.endpoint is invalid, raw %s: %w", raw, err)
+			}
+			cfg.alertmanager.endpoints = append(cfg.alertmanager.endpoints, alertmanagerEndpoint)
+		}
 	}
 
 	if rawLogsWriteEndpoint != "" {
