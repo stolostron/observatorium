@@ -63,6 +63,7 @@ func fanoutAlert(loader *EndpointLoader, logger log.Logger, registry *prometheus
 		ConstLabels: prometheus.Labels{"fanout": "fanoutv1-write"},
 	}, []string{"method"})
 
+	// Maybe don't want this (N metrics per error where N is the number of endpoints)
 	fanoutRequests := prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name:        "alert_fanout_requests_total",
 		Help:        "Counter of fanout requests.",
@@ -117,6 +118,7 @@ func fanoutAlert(loader *EndpointLoader, logger log.Logger, registry *prometheus
 					fanoutRequests.With(prometheus.Labels{"code": "<error>", "url": ep.URL}).Inc()
 					return
 				}
+
 				defer resp.Body.Close()
 				fanoutRequests.With(prometheus.Labels{"code": strconv.Itoa(resp.StatusCode), "url": ep.URL}).Inc()
 				if resp.StatusCode < 200 || resp.StatusCode >= 300 {
@@ -124,6 +126,17 @@ func fanoutAlert(loader *EndpointLoader, logger log.Logger, registry *prometheus
 					level.Error(rlogger).Log("msg", "failed to fanout alert", "code", resp.Status, "response", string(respBody), "url", ep.URL)
 				} else {
 					successCnt.Add(1)
+				}
+
+				//  only write if primary endpoint
+				if ep.primary && (resp.StatusCode < 200 || resp.StatusCode >= 300) {
+					http.Error(w, "Failed to reach alertmanager", resp.StatusCode)
+				} else if ep.primary {
+					w.WriteHeader(http.StatusOK)
+				}
+
+				if ep.primary {
+					stdlog.Printf("Status from primary endpoint %d", resp.StatusCode)
 				}
 			}()
 		}
@@ -133,15 +146,11 @@ func fanoutAlert(loader *EndpointLoader, logger log.Logger, registry *prometheus
 		total := int32(len(endpoints))
 		succeeded := successCnt.Load()
 
-		switch succeeded {
-		case total:
-			w.WriteHeader(http.StatusOK)
-		case 0:
-			level.Error(rlogger).Log("msg", "fanout complete, all endpoints failed", "total", total)
-			http.Error(w, "all alertmanager endpoints failed", http.StatusBadGateway)
-		default:
-			level.Error(rlogger).Log("msg", "Unable to fanout, only succeeding on subset of endpoints")
-			w.WriteHeader(http.StatusOK)
+		if total == succeeded {
+			stdlog.Println("Alertmanager fanout success")
+
+		} else {
+			stdlog.Printf("Alertmanager fanout failure %d / %d succeeded", succeeded, total)
 		}
 	})
 }

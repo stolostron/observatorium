@@ -7,8 +7,9 @@ import (
 )
 
 type Endpoint struct {
-	URL    string `yaml:"url"`
-	client *http.Client
+	URL     string `yaml:"url"`
+	primary bool
+	client  *http.Client
 }
 
 type EndpointLoader struct {
@@ -17,13 +18,15 @@ type EndpointLoader struct {
 	endpoints []Endpoint
 }
 
+// TODO error handling if no endpoints
 func NewEndpointLoader(urls []*url.URL) *EndpointLoader {
 	caPool := loadCACertPool()
 	resolved := make([]Endpoint, len(urls))
 	for i, u := range urls {
 		resolved[i] = Endpoint{
-			URL:    u.String(),
-			client: newHTTPClient(caPool),
+			URL:     u.String(),
+			primary: i == 0, // naive choose first
+			client:  newHTTPClient(caPool),
 		}
 	}
 	return &EndpointLoader{
@@ -49,8 +52,9 @@ func (l *EndpointLoader) reload() error {
 			ep.client.CloseIdleConnections()
 		}
 		resolved[i] = Endpoint{
-			URL:    ep.URL,
-			client: newHTTPClient(caPool),
+			URL:     ep.URL,
+			primary: ep.primary,
+			client:  newHTTPClient(caPool),
 		}
 	}
 
