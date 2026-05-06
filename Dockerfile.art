@@ -1,0 +1,43 @@
+# Copyright Contributors to the Open Cluster Management project
+# Licensed under the Apache License 2.0
+
+FROM registry-proxy.engineering.redhat.com/rh-osbs/openshift-golang-builder:v1.25.8 AS builder
+
+WORKDIR /opt
+
+COPY . .
+
+RUN git update-index --refresh; make observatorium
+
+FROM registry-proxy.engineering.redhat.com/ubi9/ubi-minimal:latest AS runner
+
+COPY --from=builder /opt/observatorium /bin/observatorium
+
+ARG BUILD_DATE
+ARG VERSION
+ARG VCS_REF
+ARG DOCKERFILE_PATH
+
+LABEL com.redhat.component="observatorium" \
+    name="rhacm2/observatorium-rhel9" \
+    cpe="cpe:/a:redhat:acm:2.16::el9" \
+    summary="observatorium-acm" \
+    description="Observatorium API" \
+    io.openshift.tags="observability" \
+    io.k8s.display-name="observatorium/observatorium" \
+    io.k8s.description="Observatorium API" \
+    maintainer="Observatorium <team-monitoring@redhat.com>" \
+    version="$VERSION" \
+    org.label-schema.build-date=$BUILD_DATE \
+    org.label-schema.description="Observatorium API" \
+    org.label-schema.docker.cmd="docker run --rm observatorium/observatorium" \
+    org.label-schema.docker.dockerfile=$DOCKERFILE_PATH \
+    org.label-schema.name="observatorium/observatorium" \
+    org.label-schema.schema-version="1.0" \
+    org.label-schema.vcs-branch=$VCS_BRANCH \
+    org.label-schema.vcs-ref=$VCS_REF \
+    org.label-schema.vcs-url="https://github.com/observatorium/observatorium" \
+    org.label-schema.vendor="Red Hat, Inc" \
+    org.label-schema.version=$VERSION
+
+ENTRYPOINT ["/bin/observatorium"]
