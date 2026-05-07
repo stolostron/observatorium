@@ -66,7 +66,7 @@ benchmark.md: $(EMBEDMD) tmp/load_help.txt
 	$(EMBEDMD) -w docs/benchmark.md
 
 observatorium: vendor main.go $(wildcard *.go) $(wildcard */*.go)
-	CGO_ENABLED=1 GOOS=$(OS) GOARCH=$(GOARCH) GO111MODULE=on GOPROXY=https://proxy.golang.org go build -mod vendor -a -ldflags '-s -w' -o $@ .
+	CGO_ENABLED=1 GOEXPERIMENT=strictfipsruntime GOOS=$(OS) GOARCH=$(GOARCH) GO111MODULE=on GOPROXY=https://proxy.golang.org go build -mod vendor -a -ldflags '-s -w' -o $@ .
 
 .PHONY: build
 build: observatorium
