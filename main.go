@@ -34,6 +34,7 @@ import (
 
 	"github.com/observatorium/observatorium/internal"
 	"github.com/observatorium/observatorium/internal/alertmanager"
+	"github.com/observatorium/observatorium/internal/fanout"
 	logsv1 "github.com/observatorium/observatorium/internal/api/logs/v1"
 	metricslegacy "github.com/observatorium/observatorium/internal/api/metrics/legacy"
 	metricsv1 "github.com/observatorium/observatorium/internal/api/metrics/v1"
@@ -404,7 +405,7 @@ func main() {
 			})
 
 			if cfg.alertmanager.enabled {
-				endpointLoader := alertmanager.NewEndpointLoader(cfg.alertmanager.endpoints)
+				endpointLoader := fanout.NewEndpointLoader(cfg.alertmanager.endpoints)
 
 				r.Group(func(r chi.Router) {
 					r.Use(authentication.WithTenantMiddlewares(oidcTenantMiddlewares, authentication.NewMTLS(mTLSs)))

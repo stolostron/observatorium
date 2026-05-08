@@ -1,4 +1,4 @@
-package alertmanager
+package fanout
 
 import (
 	"bytes"
@@ -64,22 +64,22 @@ func (fb *fakeBackend) path() string {
 	return fb.lastPath
 }
 
-func TestFanoutAlert_SendsToAllEndpoints(t *testing.T) {
+func TestFanout_SendsToAllEndpoints(t *testing.T) {
 	backends := make([]*fakeBackend, 3)
 	endpoints := make([]Endpoint, 3)
 	for i := range backends {
 		backends[i] = newFakeBackend(t)
-		endpoints[i] = Endpoint{URL: backends[i].url(), client: backends[i].server.Client()}
+		endpoints[i] = Endpoint{URL: backends[i].url()}
 	}
 
 	loader := &EndpointLoader{
 		endpoints: endpoints,
 	}
 
-	handler := fanoutAlert(loader, log.NewNopLogger(), prometheus.NewRegistry())
+	handler := FanoutRequestToEndpoints(loader, log.NewNopLogger(), http.Client{}, NewFanoutMetrics(prometheus.NewRegistry()))
 
-	alertBody := []byte(`[{"labels":{"alertname":"TestAlert"}}]`)
-	req := httptest.NewRequest(http.MethodPost, "/api/v2/alerts", bytes.NewReader(alertBody))
+	payload := []byte(`{"event":"fanout-test"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/items", bytes.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 	rec := httptest.NewRecorder()
 
@@ -112,26 +112,26 @@ func TestFanoutAlert_SendsToAllEndpoints(t *testing.T) {
 	}
 
 	for i, b := range backends {
-		if got := b.body(); !bytes.Equal(got, alertBody) {
-			t.Errorf("backend %d: body = %q, want %q", i, got, alertBody)
+		if got := b.body(); !bytes.Equal(got, payload) {
+			t.Errorf("backend %d: body = %q, want %q", i, got, payload)
 		}
-		if got := b.path(); got != "/api/v2/alerts" {
-			t.Errorf("backend %d: path = %q, want %q", i, got, "/api/v2/alerts")
+		if got := b.path(); got != "/api/v1/items" {
+			t.Errorf("backend %d: path = %q, want %q", i, got, "/api/v1/items")
 		}
 	}
 }
 
-func TestFanoutAlert_AppendsRequestPath(t *testing.T) {
+func TestFanout_AppendsRequestPath(t *testing.T) {
 	backend := newFakeBackend(t)
 	loader := &EndpointLoader{
 		endpoints: []Endpoint{
-			{URL: backend.url(), client: backend.server.Client()},
+			{URL: backend.url()},
 		},
 	}
 
-	handler := fanoutAlert(loader, log.NewNopLogger(), prometheus.NewRegistry())
+	handler := FanoutRequestToEndpoints(loader, log.NewNopLogger(), http.Client{}, NewFanoutMetrics(prometheus.NewRegistry()))
 
-	for _, path := range []string{"/api/v1/alerts", "/api/v2/alerts"} {
+	for _, path := range []string{"/api/v1/items", "/api/v2/items"} {
 		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader([]byte(`[]`)))
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, req)
@@ -144,12 +144,12 @@ func TestFanoutAlert_AppendsRequestPath(t *testing.T) {
 	}
 }
 
-func TestFanoutAlert_EmptyEndpoints(t *testing.T) {
+func TestFanout_EmptyEndpoints(t *testing.T) {
 	loader := &EndpointLoader{}
 
-	handler := fanoutAlert(loader, log.NewNopLogger(), prometheus.NewRegistry())
+	handler := FanoutRequestToEndpoints(loader, log.NewNopLogger(), http.Client{}, NewFanoutMetrics(prometheus.NewRegistry()))
 
-	req := httptest.NewRequest(http.MethodPost, "/api/v2/alerts", bytes.NewReader([]byte(`[]`)))
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/items", bytes.NewReader([]byte(`[]`)))
 	rec := httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
 
@@ -158,22 +158,22 @@ func TestFanoutAlert_EmptyEndpoints(t *testing.T) {
 	}
 }
 
-func TestFanoutAlert_ReloadEndpoints(t *testing.T) {
+func TestFanout_ReloadEndpoints(t *testing.T) {
 	oldBackends := make([]*fakeBackend, 2)
 	oldEndpoints := make([]Endpoint, 2)
 	for i := range oldBackends {
 		oldBackends[i] = newFakeBackend(t)
-		oldEndpoints[i] = Endpoint{URL: oldBackends[i].url(), client: oldBackends[i].server.Client()}
+		oldEndpoints[i] = Endpoint{URL: oldBackends[i].url()}
 	}
 
 	loader := &EndpointLoader{
 		endpoints: oldEndpoints,
 	}
 
-	handler := fanoutAlert(loader, log.NewNopLogger(), prometheus.NewRegistry())
+	handler := FanoutRequestToEndpoints(loader, log.NewNopLogger(), http.Client{}, NewFanoutMetrics(prometheus.NewRegistry()))
 
-	firstBody := []byte(`[{"labels":{"alertname":"BeforeReload"}}]`)
-	req := httptest.NewRequest(http.MethodPost, "/api/v2/alerts", bytes.NewReader(firstBody))
+	firstBody := []byte(`{"phase":"before-reload"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/items", bytes.NewReader(firstBody))
 	req.Header.Set("Content-Type", "application/json")
 	handler.ServeHTTP(httptest.NewRecorder(), req)
 
@@ -183,15 +183,15 @@ func TestFanoutAlert_ReloadEndpoints(t *testing.T) {
 	newEndpoints := make([]Endpoint, 3)
 	for i := range newBackends {
 		newBackends[i] = newFakeBackend(t)
-		newEndpoints[i] = Endpoint{URL: newBackends[i].url(), client: newBackends[i].server.Client()}
+		newEndpoints[i] = Endpoint{URL: newBackends[i].url()}
 	}
 
 	loader.mu.Lock()
 	loader.endpoints = newEndpoints
 	loader.mu.Unlock()
 
-	secondBody := []byte(`[{"labels":{"alertname":"AfterReload"}}]`)
-	req = httptest.NewRequest(http.MethodPost, "/api/v2/alerts", bytes.NewReader(secondBody))
+	secondBody := []byte(`{"phase":"after-reload"}`)
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/items", bytes.NewReader(secondBody))
 	req.Header.Set("Content-Type", "application/json")
 	handler.ServeHTTP(httptest.NewRecorder(), req)
 
