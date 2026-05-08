@@ -1,16 +1,28 @@
 package alertmanager
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	stdlog "log"
+	"net"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-kit/kit/log"
+	"github.com/observatorium/observatorium/internal/fanout"
 	"github.com/prometheus/client_golang/prometheus"
 )
+
+const alertmanagerCAPath = "/etc/observatorium/alertmanager/service-ca.crt"
+const alertmanagerServerName = "alertmanager.open-cluster-management-observability.svc"
 
 type handlerConfiguration struct {
 	logger           log.Logger
 	registry         *prometheus.Registry
+	caPath           string
+	serverName       string
 	writeMiddlewares []func(http.Handler) http.Handler
 }
 
@@ -34,7 +46,40 @@ func WriteMiddleware(m func(http.Handler) http.Handler) HandlerOption {
 	}
 }
 
-func NewHandler(loader *EndpointLoader, opts ...HandlerOption) http.Handler {
+func loadCACertPool() *x509.CertPool {
+	caCert, err := os.ReadFile(alertmanagerCAPath)
+	if err != nil {
+		stdlog.Printf("CA certificate not available at %s, using system roots: %v", alertmanagerCAPath, err)
+		return nil
+	}
+	pool := x509.NewCertPool()
+	if !pool.AppendCertsFromPEM(caCert) {
+		stdlog.Printf("failed to parse CA certificate from %s, using system roots", alertmanagerCAPath)
+		return nil
+	}
+	stdlog.Printf("loaded CA certificate from %s", alertmanagerCAPath)
+	return pool
+}
+
+func newHTTPClient(caPool *x509.CertPool, serverName string) *http.Client {
+	transport := &http.Transport{
+		DisableKeepAlives: true,
+		IdleConnTimeout:   30 * time.Second,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+	}
+	if caPool != nil {
+		transport.TLSClientConfig = &tls.Config{
+			ServerName: serverName,
+			RootCAs:    caPool,
+		}
+	}
+	return &http.Client{Transport: transport}
+}
+
+func NewHandler(loader *fanout.EndpointLoader, opts ...HandlerOption) http.Handler {
 	c := &handlerConfiguration{
 		logger:   log.NewNopLogger(),
 		registry: prometheus.NewRegistry(),
@@ -43,10 +88,15 @@ func NewHandler(loader *EndpointLoader, opts ...HandlerOption) http.Handler {
 		o(c)
 	}
 	r := chi.NewRouter()
-	fanout := fanoutAlert(loader, c.logger, c.registry)
+
+	// create client here
+	caPool := loadCACertPool()
+	client := newHTTPClient(caPool, alertmanagerServerName)
+
+	alertFanout := fanout.FanoutRequestToEndpoints(loader, c.logger, *client, fanout.NewFanoutMetrics(c.registry))
 	r.Group(func(r chi.Router) {
 		r.Use(c.writeMiddlewares...)
-		r.Post("/api/v2/alerts", fanout.ServeHTTP)
+		r.Post("/api/v2/alerts", alertFanout.ServeHTTP)
 	})
 	return r
 }
