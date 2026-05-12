@@ -107,7 +107,7 @@ func TestNewHandler_FanoutAlertsSuccess(t *testing.T) {
 	backend := newFakeAlertBackend(t)
 	loader := fanout.NewEndpointLoader([]*url.URL{mustParseURL(t, backend.url())})
 
-	h := alertmanager.NewHandler(loader)
+	h := alertmanager.NewHandler(loader, "", "")
 
 	payload := []byte(`[{"labels":{"alertname":"Test"}}]`)
 	req := httptest.NewRequest(http.MethodPost, "/api/v2/alerts", bytes.NewReader(payload))
@@ -137,7 +137,7 @@ func TestNewHandler_FanoutAlertsMultipleEndpoints(t *testing.T) {
 	}
 	loader := fanout.NewEndpointLoader(urls)
 
-	h := alertmanager.NewHandler(loader)
+	h := alertmanager.NewHandler(loader, "", "")
 
 	payload := []byte(`[]`)
 	req := httptest.NewRequest(http.MethodPost, "/api/v2/alerts", bytes.NewReader(payload))

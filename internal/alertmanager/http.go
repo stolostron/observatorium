@@ -15,15 +15,21 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-const alertmanagerCAPath = "/etc/observatorium/alertmanager/service-ca.crt"
-const alertmanagerServerName = "alertmanager.open-cluster-management-observability.svc"
+const (
+	dialTimeout = 30 * time.Second
+)
+
+const AlertmanagerAlertsRoute = "/api/v2/alerts"
 
 type handlerConfiguration struct {
 	logger           log.Logger
 	registry         *prometheus.Registry
-	caPath           string
-	serverName       string
+	instrument       handlerInstrumenter
 	writeMiddlewares []func(http.Handler) http.Handler
+}
+
+type handlerInstrumenter interface {
+	NewHandler(labels prometheus.Labels, handler http.Handler) http.HandlerFunc
 }
 
 type HandlerOption func(h *handlerConfiguration)
@@ -46,57 +52,67 @@ func WriteMiddleware(m func(http.Handler) http.Handler) HandlerOption {
 	}
 }
 
-func loadCACertPool() *x509.CertPool {
-	caCert, err := os.ReadFile(alertmanagerCAPath)
+type nopInstrumentHandler struct{}
+
+func (n nopInstrumentHandler) NewHandler(_ prometheus.Labels, handler http.Handler) http.HandlerFunc {
+	return handler.ServeHTTP
+}
+
+func loadCACertPool(caPath string) *x509.CertPool {
+	if caPath == "" {
+		return nil
+	}
+	caCert, err := os.ReadFile(caPath)
 	if err != nil {
-		stdlog.Printf("CA certificate not available at %s, using system roots: %v", alertmanagerCAPath, err)
+		stdlog.Printf("CA certificate not available at %s, using system roots: %v", caPath, err)
 		return nil
 	}
 	pool := x509.NewCertPool()
 	if !pool.AppendCertsFromPEM(caCert) {
-		stdlog.Printf("failed to parse CA certificate from %s, using system roots", alertmanagerCAPath)
+		stdlog.Printf("failed to parse CA certificate from %s, using system roots", caPath)
 		return nil
 	}
-	stdlog.Printf("loaded CA certificate from %s", alertmanagerCAPath)
 	return pool
 }
 
 func newHTTPClient(caPool *x509.CertPool, serverName string) *http.Client {
 	transport := &http.Transport{
 		DisableKeepAlives: true,
-		IdleConnTimeout:   30 * time.Second,
+		IdleConnTimeout:   dialTimeout,
 		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
+			Timeout:   dialTimeout,
+			KeepAlive: dialTimeout,
 		}).DialContext,
 	}
-	if caPool != nil {
+
+	if caPool != nil && serverName != "" {
 		transport.TLSClientConfig = &tls.Config{
 			ServerName: serverName,
 			RootCAs:    caPool,
 		}
 	}
+
 	return &http.Client{Transport: transport}
 }
 
-func NewHandler(loader *fanout.EndpointLoader, opts ...HandlerOption) http.Handler {
+func NewHandler(loader *fanout.EndpointLoader, upstreamCAFile, upstreamServerName string, opts ...HandlerOption) http.Handler {
 	c := &handlerConfiguration{
-		logger:   log.NewNopLogger(),
-		registry: prometheus.NewRegistry(),
+		logger:     log.NewNopLogger(),
+		registry:   prometheus.NewRegistry(),
+		instrument: nopInstrumentHandler{},
 	}
 	for _, o := range opts {
 		o(c)
 	}
 	r := chi.NewRouter()
 
-	// create client here
-	caPool := loadCACertPool()
-	client := newHTTPClient(caPool, alertmanagerServerName)
+	caPool := loadCACertPool(upstreamCAFile)
+	client := newHTTPClient(caPool, upstreamServerName)
 
 	alertFanout := fanout.FanoutRequestToEndpoints(loader, c.logger, *client, fanout.NewFanoutMetrics(c.registry))
 	r.Group(func(r chi.Router) {
 		r.Use(c.writeMiddlewares...)
-		r.Post("/api/v2/alerts", alertFanout.ServeHTTP)
+		r.Post(AlertmanagerAlertsRoute, alertFanout.ServeHTTP)
 	})
 	return r
 }

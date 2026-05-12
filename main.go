@@ -34,12 +34,12 @@ import (
 
 	"github.com/observatorium/observatorium/internal"
 	"github.com/observatorium/observatorium/internal/alertmanager"
-	"github.com/observatorium/observatorium/internal/fanout"
 	logsv1 "github.com/observatorium/observatorium/internal/api/logs/v1"
 	metricslegacy "github.com/observatorium/observatorium/internal/api/metrics/legacy"
 	metricsv1 "github.com/observatorium/observatorium/internal/api/metrics/v1"
 	"github.com/observatorium/observatorium/internal/authentication"
 	"github.com/observatorium/observatorium/internal/authorization"
+	"github.com/observatorium/observatorium/internal/fanout"
 	"github.com/observatorium/observatorium/internal/remotewrite"
 	"github.com/observatorium/observatorium/internal/server"
 	"github.com/observatorium/observatorium/internal/tls"
@@ -96,11 +96,22 @@ type metricsConfig struct {
 	tenantHeader             string
 }
 
+type logsConfig struct {
+	readEndpoint  *url.URL
+	writeEndpoint *url.URL
+	tailEndpoint  *url.URL
+	tenantHeader  string
+	// enable logs at least one {read,write,tail}Endpoint} is provided.
+	enabled bool
+}
+
 type alertmanagerConfig struct {
-	endpoints       []*url.URL
-	tenantHeader    string
-	upstreamTimeout time.Duration
-	enabled         bool
+	endpoints          []*url.URL
+	tenantHeader       string
+	upstreamTimeout    time.Duration
+	enabled            bool
+	upstreamCAFile     string
+	upstreamServerName string
 }
 
 type alertmanagerEndpoints []string
@@ -114,15 +125,6 @@ func (am *alertmanagerEndpoints) Set(endpoint string) error {
 	return nil
 }
 
-type logsConfig struct {
-	readEndpoint  *url.URL
-	writeEndpoint *url.URL
-	tailEndpoint  *url.URL
-	tenantHeader  string
-	// enable logs at least one {read,write,tail}Endpoint} is provided.
-	enabled bool
-}
-
 const (
 	// Global HTTP server request/response timeouts.
 	readHeaderTimeout = 1 * time.Second
@@ -134,6 +136,10 @@ const (
 
 	// Server shutdown grace period.
 	gracePeriod = 2 * time.Minute
+
+	// Defaults for TLS when proxying to Alertmanager (overridable via flags).
+	defaultAlertmanagerUpstreamCAFile     = "/etc/observatorium/alertmanager/service-ca.crt"
+	defaultAlertmanagerUpstreamServerName = "alertmanager.open-cluster-management-observability.svc"
 )
 
 //nolint:funlen,gocyclo,gocognit
@@ -414,6 +420,8 @@ func main() {
 
 					alertmanagerHandler := alertmanager.NewHandler(
 						endpointLoader,
+						cfg.alertmanager.upstreamCAFile,
+						cfg.alertmanager.upstreamServerName,
 						alertmanager.Logger(logger),
 						alertmanager.Registry(reg),
 						alertmanager.WriteMiddleware(authorization.WithAuthorizer(authorizer, rbac.Write, "alertmanager")),
@@ -613,6 +621,10 @@ func parseFlags() (config, error) {
 		"The name of the HTTP header containing the tenant ID to forward to alertmanager.")
 	flag.DurationVar(&cfg.alertmanager.upstreamTimeout, "alertmanager.upstream-timeout", metricsMiddlewareTimeout,
 		"The HTTP timeout for proxied requests to alertmanager endpoints.")
+	flag.StringVar(&cfg.alertmanager.upstreamCAFile, "alertmanager.upstream-ca-file", defaultAlertmanagerUpstreamCAFile,
+		"PEM file of trusted CAs for TLS to Alertmanager upstreams. Empty uses the host's default root CAs.")
+	flag.StringVar(&cfg.alertmanager.upstreamServerName, "alertmanager.upstream-server-name", defaultAlertmanagerUpstreamServerName,
+		"TLS ServerName for Alertmanager upstream connections (SNI and certificate verification). Empty lets Go infer from the request URL.")
 	flag.Parse()
 
 	metricsReadEndpoint, err := url.ParseRequestURI(rawMetricsReadEndpoint)
