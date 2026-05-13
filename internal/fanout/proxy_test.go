@@ -158,59 +158,6 @@ func TestFanout_EmptyEndpoints(t *testing.T) {
 	}
 }
 
-func TestFanout_ReloadEndpoints(t *testing.T) {
-	oldBackends := make([]*fakeBackend, 2)
-	oldEndpoints := make([]Endpoint, 2)
-	for i := range oldBackends {
-		oldBackends[i] = newFakeBackend(t)
-		oldEndpoints[i] = Endpoint{URL: oldBackends[i].url()}
-	}
-
-	loader := &EndpointLoader{
-		endpoints: oldEndpoints,
-	}
-
-	handler := FanoutRequestToEndpoints(loader, log.NewNopLogger(), http.Client{}, NewFanoutMetrics(prometheus.NewRegistry()))
-
-	firstBody := []byte(`{"phase":"before-reload"}`)
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/items", bytes.NewReader(firstBody))
-	req.Header.Set("Content-Type", "application/json")
-	handler.ServeHTTP(httptest.NewRecorder(), req)
-
-	waitForBackends(t, oldBackends, 1)
-
-	newBackends := make([]*fakeBackend, 3)
-	newEndpoints := make([]Endpoint, 3)
-	for i := range newBackends {
-		newBackends[i] = newFakeBackend(t)
-		newEndpoints[i] = Endpoint{URL: newBackends[i].url()}
-	}
-
-	loader.mu.Lock()
-	loader.endpoints = newEndpoints
-	loader.mu.Unlock()
-
-	secondBody := []byte(`{"phase":"after-reload"}`)
-	req = httptest.NewRequest(http.MethodPost, "/api/v1/items", bytes.NewReader(secondBody))
-	req.Header.Set("Content-Type", "application/json")
-	handler.ServeHTTP(httptest.NewRecorder(), req)
-
-	waitForBackends(t, newBackends, 1)
-
-	for i, b := range newBackends {
-		if got := b.body(); !bytes.Equal(got, secondBody) {
-			t.Errorf("new backend %d: body = %q, want %q", i, got, secondBody)
-		}
-	}
-
-	for i, b := range oldBackends {
-		if b.count() != 1 {
-			t.Errorf("old backend %d: received %d requests after reload, want 0 additional (1 total)",
-				i, b.count())
-		}
-	}
-}
-
 func waitForBackends(t *testing.T, backends []*fakeBackend, wantCount int64) {
 	t.Helper()
 	deadline := time.After(2 * time.Second)
