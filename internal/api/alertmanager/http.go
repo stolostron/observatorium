@@ -6,6 +6,7 @@ import (
 	stdlog "log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -16,10 +17,9 @@ import (
 )
 
 const (
-	dialTimeout = 30 * time.Second
+	dialTimeout             = 30 * time.Second
+	AlertmanagerAlertsRoute = "/api/v2/alerts"
 )
-
-const AlertmanagerAlertsRoute = "/api/v2/alerts"
 
 type handlerConfiguration struct {
 	logger           log.Logger
@@ -95,7 +95,7 @@ func newHTTPClient(caPool *x509.CertPool, serverName string) *http.Client {
 	return &http.Client{Transport: transport}
 }
 
-func NewHandler(loader *fanout.EndpointLoader, upstreamCAFile, upstreamServerName string, opts ...HandlerOption) http.Handler {
+func NewHandler(endpoints []*url.URL, upstreamCAFile string, upstreamServerName string, opts ...HandlerOption) http.Handler {
 	c := &handlerConfiguration{
 		logger:     log.NewNopLogger(),
 		registry:   prometheus.NewRegistry(),
@@ -109,7 +109,7 @@ func NewHandler(loader *fanout.EndpointLoader, upstreamCAFile, upstreamServerNam
 	caPool := loadCACertPool(upstreamCAFile)
 	client := newHTTPClient(caPool, upstreamServerName)
 
-	alertFanout := fanout.FanoutRequestToEndpoints(loader, c.logger, *client, fanout.NewFanoutMetrics(c.registry))
+	alertFanout := fanout.FanoutRequestToEndpoints(client, endpoints, c.logger, fanout.NewFanoutMetrics(c.registry))
 	r.Group(func(r chi.Router) {
 		r.Use(c.writeMiddlewares...)
 		r.Post(AlertmanagerAlertsRoute, alertFanout.ServeHTTP)

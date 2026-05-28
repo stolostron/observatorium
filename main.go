@@ -33,13 +33,12 @@ import (
 	yamlv2 "gopkg.in/yaml.v2"
 
 	"github.com/observatorium/observatorium/internal"
-	"github.com/observatorium/observatorium/internal/alertmanager"
+	"github.com/observatorium/observatorium/internal/api/alertmanager"
 	logsv1 "github.com/observatorium/observatorium/internal/api/logs/v1"
 	metricslegacy "github.com/observatorium/observatorium/internal/api/metrics/legacy"
 	metricsv1 "github.com/observatorium/observatorium/internal/api/metrics/v1"
 	"github.com/observatorium/observatorium/internal/authentication"
 	"github.com/observatorium/observatorium/internal/authorization"
-	"github.com/observatorium/observatorium/internal/fanout"
 	"github.com/observatorium/observatorium/internal/remotewrite"
 	"github.com/observatorium/observatorium/internal/server"
 	"github.com/observatorium/observatorium/internal/tls"
@@ -411,7 +410,6 @@ func main() {
 			})
 
 			if cfg.alertmanager.enabled {
-				endpointLoader := fanout.NewEndpointLoader(cfg.alertmanager.endpoints)
 
 				r.Group(func(r chi.Router) {
 					r.Use(authentication.WithTenantMiddlewares(oidcTenantMiddlewares, authentication.NewMTLS(mTLSs)))
@@ -419,7 +417,7 @@ func main() {
 					r.Use(authentication.WithTenantHeader(cfg.alertmanager.tenantHeader, tenantIDs))
 
 					alertmanagerHandler := alertmanager.NewHandler(
-						endpointLoader,
+						cfg.alertmanager.endpoints,
 						cfg.alertmanager.upstreamCAFile,
 						cfg.alertmanager.upstreamServerName,
 						alertmanager.Logger(logger),

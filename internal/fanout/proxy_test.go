@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -64,19 +65,25 @@ func (fb *fakeBackend) path() string {
 	return fb.lastPath
 }
 
+func mustParseURL(t *testing.T, raw string) *url.URL {
+	t.Helper()
+	u, err := url.Parse(raw)
+	if err != nil {
+		t.Fatalf("parse URL %q: %v", raw, err)
+	}
+	return u
+}
+
 func TestFanout_SendsToAllEndpoints(t *testing.T) {
 	backends := make([]*fakeBackend, 3)
-	endpoints := make([]Endpoint, 3)
+	endpoints := make([]*url.URL, 3)
 	for i := range backends {
 		backends[i] = newFakeBackend(t)
-		endpoints[i] = Endpoint{URL: backends[i].url()}
+		endpoints[i] = mustParseURL(t, backends[i].url())
 	}
 
-	loader := &EndpointLoader{
-		endpoints: endpoints,
-	}
-
-	handler := FanoutRequestToEndpoints(loader, log.NewNopLogger(), http.Client{}, NewFanoutMetrics(prometheus.NewRegistry()))
+	client := &http.Client{}
+	handler := FanoutRequestToEndpoints(client, endpoints, log.NewNopLogger(), NewFanoutMetrics(prometheus.NewRegistry()))
 
 	payload := []byte(`{"event":"fanout-test"}`)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/items", bytes.NewReader(payload))
@@ -123,13 +130,10 @@ func TestFanout_SendsToAllEndpoints(t *testing.T) {
 
 func TestFanout_AppendsRequestPath(t *testing.T) {
 	backend := newFakeBackend(t)
-	loader := &EndpointLoader{
-		endpoints: []Endpoint{
-			{URL: backend.url()},
-		},
-	}
+	endpoints := []*url.URL{mustParseURL(t, backend.url())}
 
-	handler := FanoutRequestToEndpoints(loader, log.NewNopLogger(), http.Client{}, NewFanoutMetrics(prometheus.NewRegistry()))
+	client := &http.Client{}
+	handler := FanoutRequestToEndpoints(client, endpoints, log.NewNopLogger(), NewFanoutMetrics(prometheus.NewRegistry()))
 
 	for _, path := range []string{"/api/v1/items", "/api/v2/items"} {
 		req := httptest.NewRequest(http.MethodPost, path, bytes.NewReader([]byte(`[]`)))
@@ -145,9 +149,8 @@ func TestFanout_AppendsRequestPath(t *testing.T) {
 }
 
 func TestFanout_EmptyEndpoints(t *testing.T) {
-	loader := &EndpointLoader{}
-
-	handler := FanoutRequestToEndpoints(loader, log.NewNopLogger(), http.Client{}, NewFanoutMetrics(prometheus.NewRegistry()))
+	client := &http.Client{}
+	handler := FanoutRequestToEndpoints(client, nil, log.NewNopLogger(), NewFanoutMetrics(prometheus.NewRegistry()))
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/items", bytes.NewReader([]byte(`[]`)))
 	rec := httptest.NewRecorder()

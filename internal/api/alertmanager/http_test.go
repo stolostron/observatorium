@@ -11,8 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/observatorium/observatorium/internal/alertmanager"
-	"github.com/observatorium/observatorium/internal/fanout"
+	"github.com/observatorium/observatorium/internal/api/alertmanager"
 )
 
 type fakeAlertBackend struct {
@@ -105,9 +104,9 @@ func waitForAlertBackends(t *testing.T, backends []*fakeAlertBackend, wantCount 
 
 func TestNewHandler_FanoutAlertsSuccess(t *testing.T) {
 	backend := newFakeAlertBackend(t)
-	loader := fanout.NewEndpointLoader([]*url.URL{mustParseURL(t, backend.url())})
+	endpoints := []*url.URL{mustParseURL(t, backend.url())}
 
-	h := alertmanager.NewHandler(loader, "", "")
+	h := alertmanager.NewHandler(endpoints, "", "")
 
 	payload := []byte(`[{"labels":{"alertname":"Test"}}]`)
 	req := httptest.NewRequest(http.MethodPost, "/api/v2/alerts", bytes.NewReader(payload))
@@ -131,13 +130,12 @@ func TestNewHandler_FanoutAlertsSuccess(t *testing.T) {
 
 func TestNewHandler_FanoutAlertsMultipleEndpoints(t *testing.T) {
 	backends := []*fakeAlertBackend{newFakeAlertBackend(t), newFakeAlertBackend(t)}
-	urls := []*url.URL{
+	endpoints := []*url.URL{
 		mustParseURL(t, backends[0].url()),
 		mustParseURL(t, backends[1].url()),
 	}
-	loader := fanout.NewEndpointLoader(urls)
 
-	h := alertmanager.NewHandler(loader, "", "")
+	h := alertmanager.NewHandler(endpoints, "", "")
 
 	payload := []byte(`[]`)
 	req := httptest.NewRequest(http.MethodPost, "/api/v2/alerts", bytes.NewReader(payload))
