@@ -35,7 +35,7 @@ func NewFanoutMetrics(reg prometheus.Registerer) FanoutMetrics {
 	return FanoutMetrics{requests: requests, fanoutRequests: fanoutRequests}
 }
 
-func FanoutRequestToEndpoints(loader *EndpointLoader, logger log.Logger, client http.Client, m FanoutMetrics) http.Handler {
+func FanoutRequestToEndpoints(client *http.Client, endpoints []*url.URL, logger log.Logger, m FanoutMetrics) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m.requests.With(prometheus.Labels{"method": r.Method}).Inc()
@@ -49,7 +49,6 @@ func FanoutRequestToEndpoints(loader *EndpointLoader, logger log.Logger, client 
 		r.Body.Close()
 		r.Body = io.NopCloser(bytes.NewBuffer(body))
 
-		endpoints := loader.GetEndpoints()
 		if len(endpoints) == 0 {
 			http.Error(w, "fanout endpoints not loaded", http.StatusBadRequest)
 			return
@@ -61,44 +60,37 @@ func FanoutRequestToEndpoints(loader *EndpointLoader, logger log.Logger, client 
 
 		for _, ep := range endpoints {
 			wg.Add(1)
-			go func() {
+			go func(ep *url.URL) {
 				defer wg.Done()
-				targetUrl, err := url.JoinPath(ep.URL, r.URL.Path)
+				targetURL, err := url.JoinPath(ep.String(), r.URL.Path)
 				if err != nil {
-					level.Error(rlogger).Log("msg", "failed to get url", "err", err, "url", targetUrl)
+					level.Error(rlogger).Log("msg", "failed to get url", "err", err, "url", targetURL)
 					return
 				}
-				req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, targetUrl, bytes.NewBuffer(body))
+				req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, targetURL, bytes.NewBuffer(body))
 				if err != nil {
-					level.Error(rlogger).Log("msg", "failed to create fanout request", "err", err, "url", ep.URL)
+					level.Error(rlogger).Log("msg", "failed to create fanout request", "err", err, "url", ep.String())
 					return
 				}
 				req.Header = r.Header.Clone()
 
 				resp, err := client.Do(req)
 				if err != nil {
-					level.Error(rlogger).Log("msg", "failed to send request", "err", err, "url", ep.URL)
-					m.fanoutRequests.With(prometheus.Labels{"code": "<error>", "url": ep.URL}).Inc()
+					level.Error(rlogger).Log("msg", "failed to send request", "err", err, "url", ep.String())
+					m.fanoutRequests.With(prometheus.Labels{"code": "<error>", "url": ep.String()}).Inc()
 					return
 				}
 
 				defer resp.Body.Close()
-				m.fanoutRequests.With(prometheus.Labels{"code": strconv.Itoa(resp.StatusCode), "url": ep.URL}).Inc()
+				m.fanoutRequests.With(prometheus.Labels{"code": strconv.Itoa(resp.StatusCode), "url": ep.String()}).Inc()
 				if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 					respBody, _ := io.ReadAll(resp.Body)
-					level.Error(rlogger).Log("msg", "fanout target returned error", "code", resp.Status, "response", string(respBody), "url", ep.URL)
+					level.Error(rlogger).Log("msg", "fanout target returned error", "code", resp.Status, "response", string(respBody), "url", ep.String())
 				} else {
 					successCnt.Add(1)
 				}
 
-				//  only respond with primary endpoint. Others will not return response
-				if ep.primary && (resp.StatusCode < 200 || resp.StatusCode >= 300) {
-					http.Error(w, "Failed to reach fanout target endpoints", resp.StatusCode)
-				} else if ep.primary {
-					w.WriteHeader(http.StatusOK)
-				}
-
-			}()
+			}(ep)
 		}
 
 		wg.Wait()
