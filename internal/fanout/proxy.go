@@ -43,7 +43,7 @@ func FanoutRequestToEndpoints(client *http.Client, endpoints []*url.URL, logger 
 
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			level.Error(rlogger).Log("msg", "failed to read request body")
+			http.Error(w, "failed to read request body", http.StatusInternalServerError)
 			return
 		}
 		r.Body.Close()
@@ -94,6 +94,14 @@ func FanoutRequestToEndpoints(client *http.Client, endpoints []*url.URL, logger 
 		}
 
 		wg.Wait()
+		// say n is the number of endpoints. If at least 1 of n requests fail, return error response
+		// consistent with prometheus fanout implementation that expects to log error when alert request fails to 1+ alertmanager
+		// only difference is prometheus fanout logs 1+ times whereas this implementation will only log failed alert once on prometheus
+		if int(successCnt.Load()) < len(endpoints) {
+			// note that prometheus does not retry failed alert requests, instead relying on resend delay for re-firing alert
+			http.Error(w, "Failed to reach all fanout targets", http.StatusBadGateway)
+		}
+		w.WriteHeader(http.StatusOK)
 
 	})
 }

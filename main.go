@@ -108,9 +108,12 @@ type alertmanagerConfig struct {
 	endpoints          []*url.URL
 	tenantHeader       string
 	upstreamTimeout    time.Duration
-	enabled            bool
 	upstreamCAFile     string
 	upstreamServerName string
+}
+
+func (am alertmanagerConfig) isEnabled() bool {
+	return len(am.endpoints) > 0
 }
 
 type alertmanagerEndpoints []string
@@ -409,7 +412,7 @@ func main() {
 
 			})
 
-			if cfg.alertmanager.enabled {
+			if cfg.alertmanager.isEnabled() {
 
 				r.Group(func(r chi.Router) {
 					r.Use(authentication.WithTenantMiddlewares(oidcTenantMiddlewares, authentication.NewMTLS(mTLSs)))
@@ -675,7 +678,6 @@ func parseFlags() (config, error) {
 	}
 
 	if len(rawAlertmanagerEndpoints) > 0 {
-		cfg.alertmanager.enabled = true
 		for _, raw := range rawAlertmanagerEndpoints {
 			alertmanagerEndpoint, err := url.ParseRequestURI(raw)
 			if err != nil {
