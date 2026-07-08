@@ -25,6 +25,7 @@ local defaults = {
   tls: {},
   rateLimiter: {},
   internal: {},
+  extraVolumeMounts: [],
   securityContext: {},
 
   commonLabels:: {
@@ -114,6 +115,16 @@ function(params) {
                 '--web.internal.listen=0.0.0.0:%s' % api.config.ports.internal,
                 '--metrics.read.endpoint=' + api.config.metrics.readEndpoint,
                 '--metrics.write.endpoint=' + api.config.metrics.writeEndpoint,
+              ] + (
+                if std.objectHas(api.config.metrics, 'alertmanagerEndpoints')
+                   && std.isArray(api.config.metrics.alertmanagerEndpoints)
+                   && std.length(api.config.metrics.alertmanagerEndpoints) > 0 then
+                  [
+                    '--metrics.alertmanager.endpoint=' + ep
+                    for ep in api.config.metrics.alertmanagerEndpoints
+                  ]
+                else []
+              ) + [
                 '--log.level=warn',
               ] + (
                 if api.config.logs != {} then
@@ -298,10 +309,11 @@ function(params) {
                   )
                   else []
                 ) + (
-                  if std.objectHas(api.config, 'extraVolumeMounts') then [
+                  if std.length(api.config.extraVolumeMounts) > 0 then [
                     {
                       name: mount.name,
                       mountPath: mount.mountPath,
+                      subPath: mount.key,
                       readOnly: true,
                     }
                     for mount in api.config.extraVolumeMounts
@@ -387,7 +399,7 @@ function(params) {
                 for name in api.config.additionalWriteEndpoints.mountSecrets
               ] else [])
              else []) +
-            (if std.objectHas(api.config, 'extraVolumeMounts') then [
+            (if std.length(api.config.extraVolumeMounts) > 0 then [
                if mount.type == 'configMap' then {
                  name: mount.name,
                  configMap: { name: mount.name },
