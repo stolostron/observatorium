@@ -1,8 +1,8 @@
 module github.com/observatorium/observatorium
 
-go 1.23.0
+go 1.26.0
 
-toolchain go1.23.7
+toolchain go1.26.7
 
 require (
 	github.com/brancz/gojsontoyaml v0.0.0-20191212081931-bf2969bbd742
