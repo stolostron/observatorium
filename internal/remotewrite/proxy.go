@@ -80,12 +80,12 @@ func remoteWrite(write *url.URL, endpoints []Endpoint, logger log.Logger) http.H
 						KeepAlive: 30 * time.Second,
 					}).DialContext))
 				if err != nil {
-					//level.Error(rlogger).Log("msg", "failed to create a new HTTP client", "err", err)
 					LogChannels[i] <- logMessage{
 						messageKey: "failed to create a new HTTP client",
 						keyvals: []interface{}{
 							"msg", "failed to create a new HTTP client", "err", err,
 						}}
+					continue
 				}
 			}
 
