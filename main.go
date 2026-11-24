@@ -76,9 +76,10 @@ type serverConfig struct {
 }
 
 type tlsConfig struct {
-	minVersion     string
-	cipherSuites   []string
-	reloadInterval time.Duration
+	minVersion       string
+	cipherSuites     []string
+	curvePreferences []string
+	reloadInterval   time.Duration
 
 	serverCertFile string
 	serverKeyFile  string
@@ -465,6 +466,7 @@ func main() {
 			cfg.tls.serverKeyFile,
 			cfg.tls.minVersion,
 			cfg.tls.cipherSuites,
+			cfg.tls.curvePreferences,
 		)
 		if err != nil {
 			stdlog.Fatalf("failed to initialize tls config: %v", err)
@@ -546,6 +548,7 @@ func parseFlags() (config, error) {
 	var (
 		additionalMetricsWriteEndpointCfg string
 		rawTLSCipherSuites                string
+		rawTLSCurvePreferences            string
 		rawMetricsReadEndpoint            string
 		rawMetricsWriteEndpoint           string
 		rawLogsReadEndpoint               string
@@ -614,6 +617,12 @@ func parseFlags() (config, error) {
 			" Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants)."+
 			" If omitted, the default Go cipher suites will be used."+
 			" Note that TLS 1.3 ciphersuites are not configurable.")
+	flag.StringVar(&rawTLSCurvePreferences, "tls.curve-preferences", "",
+		"Comma-separated list of key exchange groups for the server."+
+			" Values are IANA \"TLS Supported Groups\" names (e.g. X25519, secp256r1, X25519MLKEM768);"+
+			" Go crypto/tls constant names (e.g. CurveP256) are also accepted for the classic curves."+
+			" If omitted, the default Go groups will be used."+
+			" The list is a filter of allowed groups; crypto/tls chooses the preference order.")
 	flag.DurationVar(&cfg.tls.reloadInterval, "tls.reload-interval", time.Minute,
 		"The interval at which to watch for TLS certificate changes.")
 	flag.Var(&rawAlertmanagerEndpoints, "metrics.alertmanager.endpoint",
@@ -700,6 +709,9 @@ func parseFlags() (config, error) {
 
 	if rawTLSCipherSuites != "" {
 		cfg.tls.cipherSuites = strings.Split(rawTLSCipherSuites, ",")
+	}
+	if rawTLSCurvePreferences != "" {
+		cfg.tls.curvePreferences = strings.Split(rawTLSCurvePreferences, ",")
 	}
 
 	return cfg, nil
